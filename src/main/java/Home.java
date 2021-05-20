@@ -8,6 +8,7 @@
  *
  * @author Saurabh
  */
+import java.awt.Color;
 import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -17,6 +18,7 @@ import javax.swing.JOptionPane;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
 
 
 public class Home extends javax.swing.JFrame {
@@ -34,7 +36,6 @@ public class Home extends javax.swing.JFrame {
         conn = JavaConnect.Connectdb();
         acc = accNo;
         initiate();
-        System.out.println("abcd");
     }
     
     private void initiate() {
@@ -199,8 +200,10 @@ public class Home extends javax.swing.JFrame {
                 HomeDepositTFAmount1.setText("");
                 if(rs.getInt("Applied_For_Loan") == 0 && rs.getInt("Is_Loan_Pending") == 0) {
                     HomeDepositButton1.setEnabled(true);
+                    jLabel53.setVisible(false);
                 } else {
                     HomeDepositButton1.setEnabled(false);
+                    jLabel53.setVisible(true);
                 }
                 rs.close();
                 pst.close();
@@ -235,7 +238,7 @@ public class Home extends javax.swing.JFrame {
                     Timestamp ts = rs.getTimestamp("Loan_Approve_Date");
                     java.util.Date date = new java.util.Date();
                     date.setTime(ts.getTime());
-                    String formattedDate = new SimpleDateFormat("yyyyMMdd").format(date);
+                    String formattedDate = new SimpleDateFormat("yyyy/MM/dd").format(date);
                     jTextField8.setText(formattedDate);
                     double pam = am + (am * d * 0.13);
                     jTextField3.setText(String.valueOf(pam));
@@ -356,6 +359,9 @@ public class Home extends javax.swing.JFrame {
                 String i = rs.getString(5);
                 model.addRow(new Object[]{a,f,l,g,i});
                 HomeCustomerListTable.setEnabled(false);
+                JTableHeader header = HomeCustomerListTable.getTableHeader();
+                header.setBackground(Color.white);
+                HomeCustomerListTable.setFillsViewportHeight(true);
             }
         } catch (Exception e) {
             JOptionPane.showMessageDialog(null, e);
@@ -428,8 +434,12 @@ public class Home extends javax.swing.JFrame {
                 String l = rs.getString(3);
                 String d = rs.getString(4);
                 int m = -1 * rs.getInt(5);
-                model.addRow(new Object[]{a,f,l,d,m});
+                model.addRow(new Object[]{d,f,l,a,m});
                 HomeTransactionsTable.setEnabled(false);
+                JTableHeader header = HomeTransactionsTable.getTableHeader();
+                header.setBackground(Color.white);
+                HomeTransactionsTable.setFillsViewportHeight(true);
+
             }
         } catch (Exception e) {
             JOptionPane.showMessageDialog(null, e);
@@ -448,7 +458,7 @@ public class Home extends javax.swing.JFrame {
                 String d = rs.getString(4);
                 int m = rs.getInt(5);
                 DefaultTableModel model = (DefaultTableModel) (HomeTransactionsTable.getModel());
-                model.addRow(new Object[]{a,f,l,d,m});
+                model.addRow(new Object[]{d,f,l,a,m});
                 HomeTransactionsTable.setEnabled(false);
             }
         } catch (Exception e) {
@@ -471,6 +481,9 @@ public class Home extends javax.swing.JFrame {
                 int d = rs.getInt(4);
                 model.addRow(new Object[]{a,f,l,d});
                 HomeRequestListTable.setEnabled(false);
+                JTableHeader header = HomeRequestListTable.getTableHeader();
+                header.setBackground(Color.white);
+                HomeRequestListTable.setFillsViewportHeight(true);
             }
         } catch (Exception e) {
             JOptionPane.showMessageDialog(null, e);
@@ -493,6 +506,9 @@ public class Home extends javax.swing.JFrame {
                 int yr = rs.getInt(5);
                 model.addRow(new Object[]{a,f,l,am,yr});
                 HomeLoanRequestTable.setEnabled(false);
+                JTableHeader header = HomeLoanRequestTable.getTableHeader();
+                header.setBackground(Color.white);
+                HomeLoanRequestTable.setFillsViewportHeight(true);
             }
         } catch (Exception e) {
             JOptionPane.showMessageDialog(null, e);
@@ -516,6 +532,9 @@ public class Home extends javax.swing.JFrame {
                 int yr = rs.getInt(6);
                 model.addRow(new Object[]{a,f,l,d,am,yr});
                 HomeLoanTable.setEnabled(false);
+                JTableHeader header = HomeLoanTable.getTableHeader();
+                header.setBackground(Color.white);
+                HomeLoanTable.setFillsViewportHeight(true);
             }
         } catch (Exception e) {
             JOptionPane.showMessageDialog(null, e);
@@ -537,6 +556,9 @@ public class Home extends javax.swing.JFrame {
                 String g = rs.getString(4);
                 model.addRow(new Object[]{a,f,l,g});
                 HomeAdminTable.setEnabled(false);
+                JTableHeader header = HomeAdminTable.getTableHeader();
+                header.setBackground(Color.white);
+                HomeAdminTable.setFillsViewportHeight(true);
             }
         } catch (Exception e) {
             JOptionPane.showMessageDialog(null, e);
@@ -595,12 +617,16 @@ public class Home extends javax.swing.JFrame {
             rs = pst.executeQuery();
             if(rs.next()) {
                 int a = rs.getInt("Is_Admin");
+                int b = rs.getInt("Is_Chairman");
                 if(a == 0) {
                     jTabbedPane1.remove(jPanel5);
                     jTabbedPane1.remove(jPanel9);
                     jTabbedPane1.remove(jPanel11);
                     jTabbedPane1.remove(jPanel12);
                     jTabbedPane1.remove(jPanel13);
+                }
+                if(b == 1) {
+                    jTabbedPane1.add(jPanel13);
                 }
             }
         } catch(Exception e) {
@@ -693,6 +719,7 @@ public class Home extends javax.swing.JFrame {
         jLabel38 = new javax.swing.JLabel();
         HomeDepositTFAmount1 = new javax.swing.JTextField();
         jLabel48 = new javax.swing.JLabel();
+        jLabel53 = new javax.swing.JLabel();
         jPanel6 = new javax.swing.JPanel();
         jLabel4 = new javax.swing.JLabel();
         jLabel5 = new javax.swing.JLabel();
@@ -788,6 +815,7 @@ public class Home extends javax.swing.JFrame {
         jTabbedPane1.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
         jTabbedPane1.setFont(new java.awt.Font("Arial", 0, 18)); // NOI18N
         jTabbedPane1.setName(""); // NOI18N
+        jTabbedPane1.setPreferredSize(new java.awt.Dimension(764, 450));
 
         jPanel1.setBackground(new java.awt.Color(250, 250, 255));
 
@@ -900,7 +928,7 @@ public class Home extends javax.swing.JFrame {
                     .addComponent(HomeDepositTFAmount, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(18, 18, 18)
                 .addComponent(HomeDepositButton)
-                .addContainerGap(1858, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Deposit", jPanel1);
@@ -1014,7 +1042,7 @@ public class Home extends javax.swing.JFrame {
                     .addComponent(HomeWithdrawTFAmount, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(18, 18, 18)
                 .addComponent(HomeWithdrawButton)
-                .addContainerGap(1852, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Withdraw", jPanel2);
@@ -1072,7 +1100,11 @@ public class Home extends javax.swing.JFrame {
         jPanel3Layout.setHorizontalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel3Layout.createSequentialGroup()
-                .addContainerGap(150, Short.MAX_VALUE)
+                .addGap(87, 87, 87)
+                .addComponent(jLabel32)
+                .addContainerGap(118, Short.MAX_VALUE))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel3Layout.createSequentialGroup()
                         .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
@@ -1094,11 +1126,7 @@ public class Home extends javax.swing.JFrame {
                     .addGroup(jPanel3Layout.createSequentialGroup()
                         .addGap(116, 116, 116)
                         .addComponent(HomeTransferButton)))
-                .addGap(40, 40, 40))
-            .addGroup(jPanel3Layout.createSequentialGroup()
-                .addGap(87, 87, 87)
-                .addComponent(jLabel32)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGap(61, 61, 61))
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1128,7 +1156,7 @@ public class Home extends javax.swing.JFrame {
                     .addComponent(HomeTransTFPin, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(36, 36, 36)
                 .addComponent(HomeTransferButton)
-                .addContainerGap(1861, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Transfer", jPanel3);
@@ -1170,7 +1198,7 @@ public class Home extends javax.swing.JFrame {
                 .addComponent(jLabel41)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 334, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(1833, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Transactions", jPanel4);
@@ -1221,6 +1249,10 @@ public class Home extends javax.swing.JFrame {
 
         jLabel48.setIcon(new javax.swing.ImageIcon("C:\\Users\\Win 10 Pc\\Documents\\NetBeansProjects\\OOPCP\\Images\\Loan.png")); // NOI18N
 
+        jLabel53.setFont(new java.awt.Font("Lucida Sans", 2, 15)); // NOI18N
+        jLabel53.setForeground(new java.awt.Color(255, 0, 0));
+        jLabel53.setText("*You have already applied for loan");
+
         javax.swing.GroupLayout jPanel10Layout = new javax.swing.GroupLayout(jPanel10);
         jPanel10.setLayout(jPanel10Layout);
         jPanel10Layout.setHorizontalGroup(
@@ -1252,14 +1284,18 @@ public class Home extends javax.swing.JFrame {
                         .addGap(131, 131, 131))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel10Layout.createSequentialGroup()
                         .addComponent(jLabel48)
-                        .addGap(148, 148, 148))))
+                        .addGap(148, 148, 148))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel10Layout.createSequentialGroup()
+                        .addComponent(jLabel53)
+                        .addGap(175, 175, 175))))
         );
         jPanel10Layout.setVerticalGroup(
             jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel10Layout.createSequentialGroup()
-                .addGap(19, 19, 19)
                 .addComponent(jLabel48, javax.swing.GroupLayout.PREFERRED_SIZE, 116, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(60, 60, 60)
+                .addGap(18, 18, 18)
+                .addComponent(jLabel53)
+                .addGap(45, 45, 45)
                 .addGroup(jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel34)
                     .addComponent(HomeDepositTFAccNo1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -1285,7 +1321,7 @@ public class Home extends javax.swing.JFrame {
                     .addComponent(HomeDepositTFAmount1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(18, 18, 18)
                 .addComponent(HomeDepositButton1)
-                .addContainerGap(1844, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Loan", jPanel10);
@@ -1362,7 +1398,7 @@ public class Home extends javax.swing.JFrame {
         jPanel6Layout.setHorizontalGroup(
             jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel6Layout.createSequentialGroup()
-                .addContainerGap(154, Short.MAX_VALUE)
+                .addContainerGap(143, Short.MAX_VALUE)
                 .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jLabel4)
                     .addComponent(jLabel5)
@@ -1382,9 +1418,9 @@ public class Home extends javax.swing.JFrame {
                     .addComponent(HomeProfTFAadharNo)
                     .addComponent(HomeProfTFAddress)
                     .addComponent(HomeProfGenderComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, 190, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(125, 125, 125))
+                .addGap(136, 136, 136))
             .addGroup(jPanel6Layout.createSequentialGroup()
-                .addGap(185, 185, 185)
+                .addGap(191, 191, 191)
                 .addComponent(HomeProfEditButton, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
                 .addComponent(HomeProfSaveButton, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -1452,7 +1488,7 @@ public class Home extends javax.swing.JFrame {
             .addGroup(jPanel7Layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jLabel49, javax.swing.GroupLayout.PREFERRED_SIZE, 283, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(2026, Short.MAX_VALUE))
+                .addContainerGap(195, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("About", jPanel7);
@@ -1470,6 +1506,7 @@ public class Home extends javax.swing.JFrame {
                 "A/C Number", "First Name", "Last Name", "Gender", "IFSC Code"
             }
         ));
+        HomeCustomerListTable.setGridColor(new java.awt.Color(0, 153, 204));
         jScrollPane1.setViewportView(HomeCustomerListTable);
         if (HomeCustomerListTable.getColumnModel().getColumnCount() > 0) {
             HomeCustomerListTable.getColumnModel().getColumn(4).setHeaderValue("Status");
@@ -1497,13 +1534,14 @@ public class Home extends javax.swing.JFrame {
                 .addComponent(jLabel50, javax.swing.GroupLayout.PREFERRED_SIZE, 107, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(20, 20, 20)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 350, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(1832, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Customer List", jPanel5);
 
         jPanel9.setBackground(new java.awt.Color(250, 250, 255));
 
+        HomeRequestListTable.setBackground(new java.awt.Color(240, 245, 255));
         HomeRequestListTable.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 51, 153)));
         HomeRequestListTable.setFont(new java.awt.Font("Times New Roman", 0, 18)); // NOI18N
         HomeRequestListTable.setModel(new javax.swing.table.DefaultTableModel(
@@ -1514,6 +1552,7 @@ public class Home extends javax.swing.JFrame {
                 "A/C Number", "First Name", "Last Name", "Amount"
             }
         ));
+        HomeRequestListTable.setGridColor(new java.awt.Color(0, 153, 204));
         jScrollPane3.setViewportView(HomeRequestListTable);
 
         jButton1.setFont(new java.awt.Font("Arial", 0, 16)); // NOI18N
@@ -1558,13 +1597,14 @@ public class Home extends javax.swing.JFrame {
                 .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 358, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
                 .addComponent(jButton1)
-                .addContainerGap(1833, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("RequestsD", jPanel9);
 
         jPanel11.setBackground(new java.awt.Color(250, 250, 255));
 
+        HomeLoanRequestTable.setBackground(new java.awt.Color(240, 245, 255));
         HomeLoanRequestTable.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 51, 153)));
         HomeLoanRequestTable.setFont(new java.awt.Font("Times New Roman", 0, 18)); // NOI18N
         HomeLoanRequestTable.setModel(new javax.swing.table.DefaultTableModel(
@@ -1575,6 +1615,7 @@ public class Home extends javax.swing.JFrame {
                 "A/C Number", "First Name", "Last Name", "Amount", "Duration (years)"
             }
         ));
+        HomeLoanRequestTable.setGridColor(new java.awt.Color(0, 153, 204));
         jScrollPane4.setViewportView(HomeLoanRequestTable);
 
         jButton3.setFont(new java.awt.Font("Arial", 0, 16)); // NOI18N
@@ -1605,13 +1646,14 @@ public class Home extends javax.swing.JFrame {
                 .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 358, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
                 .addComponent(jButton3)
-                .addContainerGap(1831, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("RequestsL", jPanel11);
 
         jPanel12.setBackground(new java.awt.Color(250, 250, 255));
 
+        HomeLoanTable.setBackground(new java.awt.Color(240, 245, 255));
         HomeLoanTable.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 51, 153)));
         HomeLoanTable.setFont(new java.awt.Font("Times New Roman", 0, 18)); // NOI18N
         HomeLoanTable.setModel(new javax.swing.table.DefaultTableModel(
@@ -1622,6 +1664,7 @@ public class Home extends javax.swing.JFrame {
                 "A/C Number", "First Name", "Last Name", "Date", "Amount", "Duration (years)"
             }
         ));
+        HomeLoanTable.setGridColor(new java.awt.Color(0, 153, 204));
         jScrollPane5.setViewportView(HomeLoanTable);
 
         javax.swing.GroupLayout jPanel12Layout = new javax.swing.GroupLayout(jPanel12);
@@ -1642,9 +1685,8 @@ public class Home extends javax.swing.JFrame {
             .addGroup(jPanel12Layout.createSequentialGroup()
                 .addGap(42, 42, 42)
                 .addComponent(jLabel51)
-                .addGap(93, 93, 93)
-                .addComponent(jScrollPane5, javax.swing.GroupLayout.PREFERRED_SIZE, 358, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(1827, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 89, Short.MAX_VALUE)
+                .addComponent(jScrollPane5, javax.swing.GroupLayout.PREFERRED_SIZE, 358, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
 
         jTabbedPane1.addTab("Loan List", jPanel12);
@@ -1663,6 +1705,7 @@ public class Home extends javax.swing.JFrame {
 
         jButton4.setText("Search");
 
+        HomeAdminTable.setBackground(new java.awt.Color(240, 245, 255));
         HomeAdminTable.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 51, 153)));
         HomeAdminTable.setFont(new java.awt.Font("Times New Roman", 0, 18)); // NOI18N
         HomeAdminTable.setModel(new javax.swing.table.DefaultTableModel(
@@ -1673,6 +1716,7 @@ public class Home extends javax.swing.JFrame {
                 "A/C Number", "First Name", "Last Name", "Gender"
             }
         ));
+        HomeAdminTable.setGridColor(new java.awt.Color(0, 153, 204));
         jScrollPane6.setViewportView(HomeAdminTable);
 
         jButton5.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
@@ -1718,9 +1762,9 @@ public class Home extends javax.swing.JFrame {
                     .addComponent(jTextField2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jButton5)
-                .addGap(36, 36, 36)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 20, Short.MAX_VALUE)
                 .addComponent(jScrollPane6, javax.swing.GroupLayout.PREFERRED_SIZE, 342, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(1826, Short.MAX_VALUE))
+                .addContainerGap())
         );
 
         jTabbedPane1.addTab("Admins", jPanel13);
@@ -1832,7 +1876,7 @@ public class Home extends javax.swing.JFrame {
                 .addComponent(jButton6)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jLabel43)
-                .addContainerGap(1873, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Pay Loan", jPanel14);
@@ -1845,7 +1889,7 @@ public class Home extends javax.swing.JFrame {
                 .addContainerGap()
                 .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel8Layout.createSequentialGroup()
-                        .addComponent(jTabbedPane1)
+                        .addComponent(jTabbedPane1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addContainerGap())
                     .addGroup(jPanel8Layout.createSequentialGroup()
                         .addComponent(jLabel1)
@@ -1887,8 +1931,8 @@ public class Home extends javax.swing.JFrame {
                             .addComponent(jLabel13)
                             .addComponent(HomeTFIFSC, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addGap(46, 46, 46)))
-                .addComponent(jTabbedPane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addComponent(jTabbedPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 498, Short.MAX_VALUE)
+                .addContainerGap())
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -1899,9 +1943,7 @@ public class Home extends javax.swing.JFrame {
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addComponent(jPanel8, javax.swing.GroupLayout.PREFERRED_SIZE, 720, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(0, 0, Short.MAX_VALUE))
+            .addComponent(jPanel8, javax.swing.GroupLayout.DEFAULT_SIZE, 720, Short.MAX_VALUE)
         );
 
         setSize(new java.awt.Dimension(804, 767));
@@ -2433,6 +2475,7 @@ public class Home extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel50;
     private javax.swing.JLabel jLabel51;
     private javax.swing.JLabel jLabel52;
+    private javax.swing.JLabel jLabel53;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
     private javax.swing.JLabel jLabel8;
