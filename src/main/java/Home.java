@@ -34,6 +34,7 @@ public class Home extends javax.swing.JFrame {
         conn = JavaConnect.Connectdb();
         acc = accNo;
         initiate();
+        System.out.println("abcd");
     }
     
     private void initiate() {
