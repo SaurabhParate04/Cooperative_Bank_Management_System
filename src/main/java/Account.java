@@ -366,7 +366,7 @@ public class Account extends javax.swing.JFrame {
 
     private void newAccCreateButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_newAccCreateButtonActionPerformed
         // Create button
-        String sql = "insert into account(Acc_No,First_Name,Last_Name,Religion,Mobile_No,Gender,DOB,Aadhar_No,Initial_Bal,IFSC_Code,Pin,Address) values(?,?,?,?,?,?,?,?,?,?,?,?)";
+        String sql = "insert into account(Acc_No,First_Name,Last_Name,Religion,Mobile_No,Gender,DOB,Aadhar_No,Baseline_Bal,IFSC_Code,Pin,Address) values(?,?,?,?,?,?,?,?,?,?,?,?)";
         try {
             pst = conn.prepareStatement(sql);
             pst.setString(1,NewAccTFAccNo.getText());

@@ -18,9 +18,11 @@ import java.time.temporal.ChronoUnit;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.Random;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 
@@ -61,7 +63,7 @@ public class Home extends javax.swing.JFrame {
         adminControls();
         setUpAdminTable();
         getPayLoanInfo();
-        setUpAdminPage();
+        addInterest();
     }
     
     private void setInfo() {
@@ -350,11 +352,18 @@ public class Home extends javax.swing.JFrame {
                 String l = rs.getString(3);
                 String g = rs.getString(4);
                 String i = rs.getString(5);
-                model.addRow(new Object[]{a,f,l,g,i});
+                model.addRow(new Object[]{a,f+" "+l,g,i});
                 HomeCustomerListTable.setEnabled(false);
                 JTableHeader header = HomeCustomerListTable.getTableHeader();
                 header.setBackground(Color.white);
                 HomeCustomerListTable.setFillsViewportHeight(true);
+                DefaultTableCellRenderer cellRenderer = new DefaultTableCellRenderer();
+                cellRenderer.setHorizontalAlignment(JLabel.CENTER);
+                HomeCustomerListTable.getColumnModel().getColumn(0).setCellRenderer(cellRenderer);
+                HomeCustomerListTable.getColumnModel().getColumn(1).setCellRenderer(cellRenderer);
+                HomeCustomerListTable.getColumnModel().getColumn(2).setCellRenderer(cellRenderer);
+                HomeCustomerListTable.getColumnModel().getColumn(3).setCellRenderer(cellRenderer);
+                HomeCustomerListTable.setAutoCreateRowSorter(true);
             }
         } catch (Exception e) {
             JOptionPane.showMessageDialog(null, e);
@@ -427,12 +436,21 @@ public class Home extends javax.swing.JFrame {
                 String l = rs.getString(3);
                 String d = rs.getString(4);
                 int m = -1 * rs.getInt(5);
-                model.addRow(new Object[]{d,f,l,a,m});
+                model.addRow(new Object[]{d,f+" "+l,a,m});
                 HomeTransactionsTable.setEnabled(false);
                 JTableHeader header = HomeTransactionsTable.getTableHeader();
                 header.setBackground(Color.white);
                 HomeTransactionsTable.setFillsViewportHeight(true);
-
+                HomeTransactionsTable.getColumnModel().getColumn(0).setPreferredWidth(140);
+                HomeTransactionsTable.getColumnModel().getColumn(2).setPreferredWidth(50);
+                HomeTransactionsTable.getColumnModel().getColumn(3).setPreferredWidth(50);
+                DefaultTableCellRenderer cellRenderer = new DefaultTableCellRenderer();
+                cellRenderer.setHorizontalAlignment(JLabel.CENTER);
+                HomeTransactionsTable.getColumnModel().getColumn(0).setCellRenderer(cellRenderer);
+                HomeTransactionsTable.getColumnModel().getColumn(1).setCellRenderer(cellRenderer);
+                HomeTransactionsTable.getColumnModel().getColumn(2).setCellRenderer(cellRenderer);
+                HomeTransactionsTable.getColumnModel().getColumn(3).setCellRenderer(cellRenderer);
+                HomeTransactionsTable.setAutoCreateRowSorter(true);
             }
         } catch (Exception e) {
             JOptionPane.showMessageDialog(null, e);
@@ -451,7 +469,7 @@ public class Home extends javax.swing.JFrame {
                 String d = rs.getString(4);
                 int m = rs.getInt(5);
                 DefaultTableModel model = (DefaultTableModel) (HomeTransactionsTable.getModel());
-                model.addRow(new Object[]{d,f,l,a,m});
+                model.addRow(new Object[]{d,f+" "+l,a,m});
                 HomeTransactionsTable.setEnabled(false);
             }
         } catch (Exception e) {
@@ -473,11 +491,18 @@ public class Home extends javax.swing.JFrame {
                 String l = rs.getString(3);
                 int am = rs.getInt(4);
                 int yr = rs.getInt(5);
-                model.addRow(new Object[]{a,f,l,am,yr});
+                model.addRow(new Object[]{a,f+" "+l,am,yr});
                 HomeLoanRequestTable.setEnabled(false);
                 JTableHeader header = HomeLoanRequestTable.getTableHeader();
                 header.setBackground(Color.white);
                 HomeLoanRequestTable.setFillsViewportHeight(true);
+                DefaultTableCellRenderer cellRenderer = new DefaultTableCellRenderer();
+                cellRenderer.setHorizontalAlignment(JLabel.CENTER);
+                HomeLoanRequestTable.getColumnModel().getColumn(0).setCellRenderer(cellRenderer);
+                HomeLoanRequestTable.getColumnModel().getColumn(1).setCellRenderer(cellRenderer);
+                HomeLoanRequestTable.getColumnModel().getColumn(2).setCellRenderer(cellRenderer);
+                HomeLoanRequestTable.getColumnModel().getColumn(3).setCellRenderer(cellRenderer);
+                HomeLoanRequestTable.setAutoCreateRowSorter(true);
             }
         } catch (Exception e) {
             JOptionPane.showMessageDialog(null, e);
@@ -499,11 +524,22 @@ public class Home extends javax.swing.JFrame {
                 String d = rs.getString(4);
                 int am = rs.getInt(5);
                 int yr = rs.getInt(6);
-                model.addRow(new Object[]{a,f,l,d,am,yr});
+                model.addRow(new Object[]{a,f+" "+l,d,am,yr});
                 HomeLoanTable.setEnabled(false);
                 JTableHeader header = HomeLoanTable.getTableHeader();
                 header.setBackground(Color.white);
                 HomeLoanTable.setFillsViewportHeight(true);
+                HomeLoanTable.getColumnModel().getColumn(2).setPreferredWidth(130);
+                HomeLoanTable.getColumnModel().getColumn(1).setPreferredWidth(110);
+                HomeLoanTable.getColumnModel().getColumn(4).setPreferredWidth(40);
+                DefaultTableCellRenderer cellRenderer = new DefaultTableCellRenderer();
+                cellRenderer.setHorizontalAlignment(JLabel.CENTER);
+                HomeLoanTable.getColumnModel().getColumn(0).setCellRenderer(cellRenderer);
+                HomeLoanTable.getColumnModel().getColumn(1).setCellRenderer(cellRenderer);
+                HomeLoanTable.getColumnModel().getColumn(2).setCellRenderer(cellRenderer);
+                HomeLoanTable.getColumnModel().getColumn(3).setCellRenderer(cellRenderer);
+                HomeLoanTable.getColumnModel().getColumn(4).setCellRenderer(cellRenderer);
+                HomeLoanTable.setAutoCreateRowSorter(true);
             }
         } catch (Exception e) {
             JOptionPane.showMessageDialog(null, e);
@@ -528,6 +564,12 @@ public class Home extends javax.swing.JFrame {
                 JTableHeader header = HomeAdminTable.getTableHeader();
                 header.setBackground(Color.white);
                 HomeAdminTable.setFillsViewportHeight(true);
+                DefaultTableCellRenderer cellRenderer = new DefaultTableCellRenderer();
+                cellRenderer.setHorizontalAlignment(JLabel.CENTER);
+                HomeAdminTable.getColumnModel().getColumn(0).setCellRenderer(cellRenderer);
+                HomeAdminTable.getColumnModel().getColumn(1).setCellRenderer(cellRenderer);
+                HomeAdminTable.getColumnModel().getColumn(2).setCellRenderer(cellRenderer);
+                HomeAdminTable.getColumnModel().getColumn(3).setCellRenderer(cellRenderer);
             }
         } catch (Exception e) {
             JOptionPane.showMessageDialog(null, e);
@@ -536,24 +578,11 @@ public class Home extends javax.swing.JFrame {
     
     public void informUser() {
         try {
-            String sql = "select Info_Deposit, Info_Loan from account where Acc_No = '"+acc+"'";
+            String sql = "select Info_Loan from account where Acc_No = '"+acc+"'";
             pst = conn.prepareStatement(sql);
             rs = pst.executeQuery();
             if(rs.next()) {
-                int d = rs.getInt("Info_Deposit");
                 int l = rs.getInt("Info_Loan");
-                if(d == 1) {
-                    JOptionPane.showMessageDialog(null, "Your deposit has been processed successfully");
-                    String q = "update account set Info_Deposit = '"+0+"'";
-                    pst = conn.prepareStatement(q);
-                    pst.execute();
-                }
-                else if(d == 2) {
-                    JOptionPane.showMessageDialog(null, "Your deposit request was declined by Bank");
-                    String q = "update account set Info_Deposit = '"+0+"'";
-                    pst = conn.prepareStatement(q);
-                    pst.execute();
-                }
                 if(l == 1) {
                     JOptionPane.showMessageDialog(null, "Your loan request has been approved!");
                     String q = "update account set Info_Loan = '"+0+"'";
@@ -606,10 +635,51 @@ public class Home extends javax.swing.JFrame {
         }
     }
     
-    private void setUpAdminPage() {
-        HomeAdminsTFName.setText("");
-        HomeAdminsTFAccNo.setEditable(true);
-        HomeMakeAdminButton.setEnabled(false);
+    private void addInterest() {
+        double interestRate;
+        int newBal;
+        String currentDate = getDateTime();
+        DateTimeFormatter f = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        LocalDateTime cDate = LocalDateTime.parse(currentDate, f);
+        String q = "select Date_of_Interest, Baseline_Bal, Non_Maintenance from account where Acc_No = '"+acc+"'";
+        try {
+            pst = conn.prepareStatement(q);
+            rs = pst.executeQuery();
+            if(rs.next()) {
+                LocalDateTime iDate = rs.getTimestamp(1).toLocalDateTime();
+                int iBal = rs.getInt(2);
+                int p = rs.getInt(3);
+                if(p == 0) {
+                    interestRate = 0.035;
+                } else {
+                    interestRate = 0.012;
+                }
+                Duration duration = Duration.between(iDate, cDate);
+                long y = ChronoUnit.YEARS.between(cDate, cDate.plus(duration));
+                if(y > 0) {
+                    int interest = (int)(iBal * interestRate * (y));
+                    String q1 = "update balance set Balance = Balance + '"+interest+"' where Account_No = '"+acc+"'";
+                    pst = conn.prepareStatement(q1);
+                    pst.execute();
+                    String q3 = "select Balance from balance where Account_No = '"+acc+"'";
+                    pst = conn.prepareStatement(q3);
+                    rs = pst.executeQuery();
+                    if(rs.next()) {
+                        newBal = rs.getInt(1);
+                        LocalDateTime nDate = iDate.plusYears(1);
+                        String q2 = "update account set Date_of_Interest = '"+nDate+"', Baseline_Bal = '"+newBal+"', Non_Maintenance = '"+0+"' where Acc_No = '"+acc+"'";
+                        pst = conn.prepareStatement(q2);
+                        pst.execute();
+                        JOptionPane.showMessageDialog(null, "Interest of '"+interest+"'Rs has been credited to your account");
+                        String q4 = "update bank set Funds = Funds - '"+interest+"'";
+                        pst = conn.prepareStatement(q4);
+                        pst.execute();
+                    }
+                }
+            }
+        } catch(Exception e) {
+            JOptionPane.showMessageDialog(null, e);
+        }
     }
     
     private void setFields() {
@@ -630,6 +700,7 @@ public class Home extends javax.swing.JFrame {
         HomeAdminsTFAccNo.setEditable(true);
         HomeAdminsTFAccNo.setText("");
         HomeAdminsTFName.setText("");
+        HomeMakeAdminButton.setEnabled(false);
         jLabel42.setVisible(false);
         jLabel56.setVisible(false);
         jLabel53.setVisible(false);
@@ -674,7 +745,7 @@ public class Home extends javax.swing.JFrame {
         jLabel18 = new javax.swing.JLabel();
         HomeDepositTFAccNo = new javax.swing.JTextField();
         jLabel30 = new javax.swing.JLabel();
-        jButton1 = new javax.swing.JButton();
+        HomeDepositSearchButton = new javax.swing.JButton();
         jPanel2 = new javax.swing.JPanel();
         HomeWithdrawButton = new javax.swing.JButton();
         jLabel24 = new javax.swing.JLabel();
@@ -868,9 +939,14 @@ public class Home extends javax.swing.JFrame {
 
         jLabel30.setIcon(new javax.swing.ImageIcon("C:\\Users\\Win 10 Pc\\Documents\\NetBeansProjects\\OOPCP\\Images\\Deposit.png")); // NOI18N
 
-        jButton1.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
-        jButton1.setIcon(new javax.swing.ImageIcon("C:\\Users\\Win 10 Pc\\Documents\\NetBeansProjects\\OOPCP\\Images\\search.gif")); // NOI18N
-        jButton1.setText("Search");
+        HomeDepositSearchButton.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
+        HomeDepositSearchButton.setIcon(new javax.swing.ImageIcon("C:\\Users\\Win 10 Pc\\Documents\\NetBeansProjects\\OOPCP\\Images\\search.gif")); // NOI18N
+        HomeDepositSearchButton.setText("Search");
+        HomeDepositSearchButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                HomeDepositSearchButtonActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -900,7 +976,7 @@ public class Home extends javax.swing.JFrame {
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(HomeDepositTFAccNo, javax.swing.GroupLayout.PREFERRED_SIZE, 160, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(37, 37, 37)
-                        .addComponent(jButton1)))
+                        .addComponent(HomeDepositSearchButton)))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
@@ -912,7 +988,7 @@ public class Home extends javax.swing.JFrame {
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel18)
                     .addComponent(HomeDepositTFAccNo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jButton1))
+                    .addComponent(HomeDepositSearchButton))
                 .addGap(13, 13, 13)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jLabel2)
@@ -1179,7 +1255,7 @@ public class Home extends javax.swing.JFrame {
 
             },
             new String [] {
-                "Date", "First Name", "Last Name", "A/C Number", "Amount"
+                "Date", "Name", "A/C Number", "Amount"
             }
         ));
         HomeTransactionsTable.setGridColor(new java.awt.Color(0, 153, 204));
@@ -1676,7 +1752,7 @@ public class Home extends javax.swing.JFrame {
 
             },
             new String [] {
-                "A/C Number", "First Name", "Last Name", "Amount", "Duration (years)"
+                "A/C Number", "Name", "Amount", "Duration (years)"
             }
         ));
         HomeLoanRequestTable.setGridColor(new java.awt.Color(0, 153, 204));
@@ -1706,8 +1782,8 @@ public class Home extends javax.swing.JFrame {
         jPanel11Layout.setVerticalGroup(
             jPanel11Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel11Layout.createSequentialGroup()
-                .addGap(86, 86, 86)
-                .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 411, Short.MAX_VALUE)
+                .addContainerGap(114, Short.MAX_VALUE)
+                .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 383, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
                 .addComponent(HomeLoanRequestActionButton)
                 .addContainerGap())
@@ -1725,14 +1801,11 @@ public class Home extends javax.swing.JFrame {
 
             },
             new String [] {
-                "A/C Number", "First Name", "Last Name", "Gender", "IFSC Code"
+                "A/C Number", "Name", "Gender", "IFSC Code"
             }
         ));
         HomeCustomerListTable.setGridColor(new java.awt.Color(0, 153, 204));
         jScrollPane1.setViewportView(HomeCustomerListTable);
-        if (HomeCustomerListTable.getColumnModel().getColumnCount() > 0) {
-            HomeCustomerListTable.getColumnModel().getColumn(4).setHeaderValue("Status");
-        }
 
         jLabel50.setIcon(new javax.swing.ImageIcon("C:\\Users\\Win 10 Pc\\Documents\\NetBeansProjects\\OOPCP\\Images\\CustomerList.png")); // NOI18N
 
@@ -1771,7 +1844,7 @@ public class Home extends javax.swing.JFrame {
 
             },
             new String [] {
-                "A/C Number", "First Name", "Last Name", "Date", "Amount", "Duration (years)"
+                "A/C Number", "Name", "Date", "Amount", "Duration (years)"
             }
         ));
         HomeLoanTable.setGridColor(new java.awt.Color(0, 153, 204));
@@ -1926,39 +1999,38 @@ public class Home extends javax.swing.JFrame {
             .addGroup(jPanel8Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(HomeTabbedPane, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+                    .addComponent(HomeTabbedPane, javax.swing.GroupLayout.PREFERRED_SIZE, 760, Short.MAX_VALUE)
                     .addGroup(jPanel8Layout.createSequentialGroup()
                         .addComponent(jLabel1)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(jPanel8Layout.createSequentialGroup()
+                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel8Layout.createSequentialGroup()
+                                .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 44, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(18, 18, 18)
+                                .addComponent(HomeTFDate, javax.swing.GroupLayout.PREFERRED_SIZE, 130, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel8Layout.createSequentialGroup()
                                 .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                     .addComponent(jLabel13)
                                     .addComponent(jLabel12))
                                 .addGap(18, 18, 18)
                                 .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                    .addComponent(HomeTFACNo, javax.swing.GroupLayout.DEFAULT_SIZE, 140, Short.MAX_VALUE)
-                                    .addComponent(HomeTFIFSC))
+                                    .addComponent(HomeTFACNo)
+                                    .addComponent(HomeTFIFSC, javax.swing.GroupLayout.PREFERRED_SIZE, 140, javax.swing.GroupLayout.PREFERRED_SIZE))
                                 .addGap(32, 32, 32)
-                                .addComponent(HomeRefreshButton))
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel8Layout.createSequentialGroup()
-                                .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 44, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(18, 18, 18)
-                                .addComponent(HomeTFDate, javax.swing.GroupLayout.PREFERRED_SIZE, 180, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(20, 20, 20)))))
+                                .addComponent(HomeRefreshButton)))
+                        .addGap(20, 20, 20)))
                 .addContainerGap())
         );
         jPanel8Layout.setVerticalGroup(
             jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel8Layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jLabel1, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, 180, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGroup(jPanel8Layout.createSequentialGroup()
+                .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel8Layout.createSequentialGroup()
                         .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel3)
-                            .addComponent(HomeTFDate, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(46, 46, 46)
+                            .addComponent(HomeTFDate, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabel3))
+                        .addGap(54, 54, 54)
                         .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel12)
                             .addComponent(HomeTFACNo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -1966,7 +2038,8 @@ public class Home extends javax.swing.JFrame {
                         .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel13)
                             .addComponent(HomeTFIFSC, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(HomeRefreshButton))))
+                            .addComponent(HomeRefreshButton)))
+                    .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 180, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(HomeTabbedPane, javax.swing.GroupLayout.PREFERRED_SIZE, 564, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
@@ -2056,7 +2129,18 @@ public class Home extends javax.swing.JFrame {
                                     try {
                                         pst = conn.prepareStatement(q2);
                                         pst.execute();
-
+                                        
+                                        String q11 = "select Baseline_Bal from account where Acc_No = '"+acc+"'";
+                                        pst = conn.prepareStatement(q11);
+                                        rs = pst.executeQuery();
+                                        if(rs.next()) {
+                                            int baselineBal = rs.getInt(1);
+                                            if(baselineBal > newB) {
+                                                String q12 = "update account set Non_Maintenance = '"+1+"' where Acc_No = '"+acc+"'";
+                                                pst = conn.prepareStatement(q12);
+                                                pst.execute();
+                                            }
+                                        }
                                     } catch(Exception e) {
                                         JOptionPane.showMessageDialog(null, "Failed to update balance");
                                     }
@@ -2139,11 +2223,21 @@ public class Home extends javax.swing.JFrame {
             String s2 = HomeWithdrawTFAmount.getText();
             int newBal = Integer.parseInt(s1) - Integer.parseInt(s2);
             if(newBal >= 0 && Integer.parseInt(s2) > 0) {
-                String bal = String.valueOf(newBal);
-                String sql = "update balance set Balance = '"+bal+"' where Account_No = '"+acc+"'";
+                String sql = "update balance set Balance = '"+newBal+"' where Account_No = '"+acc+"'";
                 pst = conn.prepareStatement(sql);
                 pst.execute();
                 JOptionPane.showMessageDialog(null, "Withdraw successfull");
+                String q = "select Baseline_Bal from account where Acc_No = '"+acc+"'";
+                pst = conn.prepareStatement(q);
+                rs = pst.executeQuery();
+                if(rs.next()) {
+                    int baselineBal = rs.getInt(1);
+                    if(baselineBal > newBal) {
+                        String q1 = "update account set Non_Maintenance = '"+1+"' where Acc_No = '"+acc+"'";
+                        pst = conn.prepareStatement(q1);
+                        pst.execute();
+                    }
+                }
                 initiate();
             }
             else {
@@ -2287,6 +2381,19 @@ public class Home extends javax.swing.JFrame {
                                     String q1 = "update balance set Balance = '"+newbal+"' where Account_No = '"+acc+"'";
                                     pst = conn.prepareStatement(q1);
                                     pst.execute();
+                                    
+                                    String q11 = "select Baseline_Bal from account where Acc_No = '"+acc+"'";
+                                    pst = conn.prepareStatement(q11);
+                                    rs = pst.executeQuery();
+                                    if(rs.next()) {
+                                        int baselineBal = rs.getInt(1);
+                                        if(baselineBal > newbal) {
+                                            String q12 = "update account set Non_Maintenance = '"+1+"' where Acc_No = '"+acc+"'";
+                                            pst = conn.prepareStatement(q12);
+                                            pst.execute();
+                                        }
+                                    }
+                                    
                                     String q5 = "update account set Current_Installment = Current_Installment+1 where Acc_No = '"+acc+"'";
                                     pst = conn.prepareStatement(q5);
                                     pst.execute();
@@ -2436,6 +2543,19 @@ public class Home extends javax.swing.JFrame {
                                         String q1 = "update balance set Balance = '"+newbal+"' where Account_No = '"+acc+"'";
                                         pst = conn.prepareStatement(q1);
                                         pst.execute();
+                                        
+                                        String q11 = "select Baseline_Bal from account where Acc_No = '"+acc+"'";
+                                        pst = conn.prepareStatement(q11);
+                                        rs = pst.executeQuery();
+                                        if(rs.next()) {
+                                            int baselineBal = rs.getInt(1);
+                                            if(baselineBal > newbal) {
+                                                String q12 = "update account set Non_Maintenance = '"+1+"' where Acc_No = '"+acc+"'";
+                                                pst = conn.prepareStatement(q12);
+                                                pst.execute();
+                                            }
+                                        }
+                                        
                                         String q4 = "select Funds from bank";
                                         pst = conn.prepareStatement(q4);
                                         rs = pst.executeQuery();
@@ -2467,6 +2587,33 @@ public class Home extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(null, e);
         }
     }//GEN-LAST:event_HomePayLoanPayEarlyButtonActionPerformed
+
+    private void HomeDepositSearchButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_HomeDepositSearchButtonActionPerformed
+        String accNo = HomeDepositTFAccNo.getText();
+        if(accNo.equals(acc)) {
+            JOptionPane.showMessageDialog(null, "You cannot enter your own account number");
+        }
+        else {
+            String sql = "select First_Name, Last_Name, IFSC_Code, Balance from balance where Account_No = '"+accNo+"'";
+            try {
+                pst = conn.prepareStatement(sql);
+                rs = pst.executeQuery();
+                if(rs.next()) {
+                    HomeDepositTFFName.setText(rs.getString("First_Name"));
+                    HomeDepositTFLName.setText(rs.getString("Last_Name"));
+                    HomeDepositTFIFSCCode.setText(rs.getString("IFSC_Code"));
+                    HomeDepositTFBal.setText(rs.getString("Balance"));
+                    HomeDepositTFAccNo.setEditable(false);
+                } else {
+                    JOptionPane.showMessageDialog(null, "Invalid Account Number");
+                    HomeDepositTFAccNo.setEditable(true);
+                    
+                }
+            } catch(Exception e) {
+                JOptionPane.showMessageDialog(null, e);
+            }
+        }
+    }//GEN-LAST:event_HomeDepositSearchButtonActionPerformed
     
     /**
      * @param args the command line arguments
@@ -2512,6 +2659,7 @@ public class Home extends javax.swing.JFrame {
     private javax.swing.JTextField HomeAmountTFAmount;
     private javax.swing.JTable HomeCustomerListTable;
     private javax.swing.JButton HomeDepositButton;
+    private javax.swing.JButton HomeDepositSearchButton;
     private javax.swing.JTextField HomeDepositTFAccNo;
     private javax.swing.JTextField HomeDepositTFAmount;
     private javax.swing.JTextField HomeDepositTFBal;
@@ -2566,7 +2714,6 @@ public class Home extends javax.swing.JFrame {
     private javax.swing.JTextField HomeWithdrawTFFirstN;
     private javax.swing.JTextField HomeWithdrawTFIFSCCode;
     private javax.swing.JTextField HomeWithdrawTFLastN;
-    private javax.swing.JButton jButton1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel11;
