@@ -181,7 +181,7 @@ public class Account extends javax.swing.JFrame {
         jLabel13.setText("Please enter the following information: ");
 
         NewAccGenderComboBox.setFont(new java.awt.Font("Arial", 0, 18)); // NOI18N
-        NewAccGenderComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Select", "Male", "Female", "Other" }));
+        NewAccGenderComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Male", "Female", "Other" }));
         NewAccGenderComboBox.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 NewAccGenderComboBoxActionPerformed(evt);
@@ -333,7 +333,7 @@ public class Account extends javax.swing.JFrame {
         NewAccTFPin.setText(""+r.nextInt(1000+1));
     }
     
-    public void Bal() {
+    private void Bal() {
         String sql = "insert into balance(First_Name,Last_Name,Account_No,IFSC_Code,Balance) values(?,?,?,?,?)";
         try {
             pst = conn.prepareStatement(sql);
@@ -368,7 +368,7 @@ public class Account extends javax.swing.JFrame {
 
     private void newAccCreateButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_newAccCreateButtonActionPerformed
         // Create button
-        String sql = "insert into account(Acc_No,First_Name,Last_Name,Religion,Mobile_No,Gender,DOB,Aadhar_No,Baseline_Bal,IFSC_Code,Pin,Address) values(?,?,?,?,?,?,?,?,?,?,?,?)";
+        String sql = "insert into account(Acc_No,First_Name,Last_Name,Religion,Mobile_No,Gender,DOB,Aadhar_No,Baseline_Bal,IFSC_Code,Pin,Address,Date_of_Interest) values(?,?,?,?,?,?,?,?,?,?,?,?,?)";
         try {
             pst = conn.prepareStatement(sql);
             pst.setString(1,NewAccTFAccNo.getText());
@@ -383,11 +383,13 @@ public class Account extends javax.swing.JFrame {
             pst.setString(10,NewAccTFIFSCCode.getText());
             pst.setString(11,NewAccTFPin.getText());
             pst.setString(12,NewAccTFAddress.getText());
+            pst.setString(13,Home.getDateTime());
             pst.execute();
             JOptionPane.showMessageDialog(null, "Account has been created successfully!");
             Bal();
-            Welcome obj = new Welcome();
-            obj.setVisible(true);
+            setVisible(false);
+            Welcome ob = new Welcome();
+            ob.setVisible(true);
         } catch(Exception e) {
             JOptionPane.showMessageDialog(null, e);
         }
