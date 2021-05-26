@@ -322,8 +322,10 @@ public class Account extends javax.swing.JFrame {
     }
     
     public void RandomIFSC() {
+        String d = Home.getDateTime();
+        String t = d.substring(3,4) + d.substring(5,7) + d.substring(8,10) + d.substring(11,13) + d.substring(14,16) + d.substring(17,19);
         Random r = new Random();
-        NewAccTFIFSCCode.setText("ECMS"+r.nextInt(10000+1));
+        NewAccTFIFSCCode.setText("ECMS"+r.nextInt(10+1)+t);
     }
     
     public void RandomPin() {

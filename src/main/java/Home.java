@@ -372,7 +372,9 @@ public class Home extends javax.swing.JFrame {
 
     private String setUpTransactionS() {
         Random r = new Random();
-        String id = "TRN" + r.nextInt(1000000+1);
+        String d = getDateTime();
+        String t = d.substring(2,4) + d.substring(5,7) + d.substring(8,10) + d.substring(11,13) + d.substring(14,16) + d.substring(17,19);
+        String id = "TRN" + t + r.nextInt(1000+1);
         try {
             String q1 = "select First_Name, Last_Name from balance where Account_No = '"+acc+"'";
             pst = conn.prepareStatement(q1);
@@ -601,7 +603,7 @@ public class Home extends javax.swing.JFrame {
         }
     }
     
-    private String getDateTime() {
+    public static String getDateTime() {
         SimpleDateFormat sdfDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         java.util.Date now = new java.util.Date();
         String strDate = sdfDate.format(now);
@@ -2110,7 +2112,6 @@ public class Home extends javax.swing.JFrame {
                 rs = pst.executeQuery();
                 if(rs.next()) {
                     int p = rs.getInt("Pin");
-                    System.out.print(p);
                     int enteredPin = Integer.parseInt(HomeTransTFPin.getText());
                     if(enteredPin == p) {
                         String q1 = "select Balance from balance where Account_No = '"+acc+"'";
