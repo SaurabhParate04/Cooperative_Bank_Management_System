@@ -355,8 +355,31 @@ public class Account extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void RandomAc() {
-        Random r = new Random();
-        NewAccTFAccNo.setText(""+r.nextInt(100000+1));
+        Random r;
+        int ac = 12345;
+        boolean isUnique = false;
+        while(isUnique == false) {
+            r = new Random();
+            ac = r.nextInt(100000+1);
+            isUnique = checkRepeatation(ac);
+        }
+        NewAccTFAccNo.setText(""+ac);
+    }
+    
+    private boolean checkRepeatation(int ac) {
+        String q = "select First_Name from account where Acc_No = '"+ac+"'";
+        try {
+            pst = conn.prepareStatement(q);
+            rs = pst.executeQuery();
+            if(rs.next()) {
+                return false;
+            } else {
+                return true;
+            }
+        } catch(Exception e) {
+            JOptionPane.showMessageDialog(null, e);
+            return true;
+        }
     }
     
     private void RandomIFSC() {
