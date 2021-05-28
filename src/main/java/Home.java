@@ -363,7 +363,7 @@ public class Home extends javax.swing.JFrame {
         model.getDataVector().removeAllElements();
         model.fireTableDataChanged();
         try {
-            String sql = "select Acc_No, First_Name, Last_Name, Gender, IFSC_Code from account";
+            String sql = "select Acc_No, First_Name, Last_Name, Gender, Designation from account";
             pst = conn.prepareStatement(sql);
             rs = pst.executeQuery();
             while(rs.next()) {
@@ -371,14 +371,14 @@ public class Home extends javax.swing.JFrame {
                 String f = rs.getString(2);
                 String l = rs.getString(3);
                 String g = rs.getString(4);
-                String i = rs.getString(5);
-                model.addRow(new Object[]{a,f+" "+l,g,i});
+                String d = rs.getString(5);
+                model.addRow(new Object[]{a,f+" "+l,g,d});
                 HomeCustomerListTable.setEnabled(false);
                 JTableHeader header = HomeCustomerListTable.getTableHeader();
                 header.setBackground(Color.white);
                 HomeCustomerListTable.setFillsViewportHeight(true);
-                HomeTransactionsTable.getColumnModel().getColumn(0).setPreferredWidth(55);
-                HomeTransactionsTable.getColumnModel().getColumn(2).setPreferredWidth(70);
+                HomeCustomerListTable.getColumnModel().getColumn(0).setPreferredWidth(55);
+                HomeCustomerListTable.getColumnModel().getColumn(2).setPreferredWidth(45);
                 DefaultTableCellRenderer cellRenderer = new DefaultTableCellRenderer();
                 cellRenderer.setHorizontalAlignment(JLabel.CENTER);
                 HomeCustomerListTable.getColumnModel().getColumn(0).setCellRenderer(cellRenderer);
@@ -626,14 +626,15 @@ public class Home extends javax.swing.JFrame {
     }
     
     private void setSalaries() {
-        int s = 0;
+        int a, s=0;
         String d;
-        String q = "select Designation from account where Acc_No = '"+acc+"'";
+        String q = "select Acc_No, Designation from account";
         try {
             pst = conn.prepareStatement(q);
             rs = pst.executeQuery();
-            if(rs.next()) {
-                d = rs.getString(1);
+            while(rs.next()) {
+                a = rs.getInt(1);
+                d = rs.getString(2);
                 if(d.equals("Non-Teaching Staff")) {
                     s = 60000;
                 } else if(d.equals("Assistant Professor")) {
@@ -646,20 +647,20 @@ public class Home extends javax.swing.JFrame {
                     s = 120000;
                 } else if(d.equals("Bank Employee")) {
                     s = 65000;
-                    String sql = "select Is_Admin, Is_Chairman from account where Acc_No = '"+acc+"'";
-                    pst = conn.prepareStatement(sql);
-                    rs = pst.executeQuery();
-                    if(rs.next()) {
-                        int a = rs.getInt("Is_Admin");
-                        int b = rs.getInt("Is_Chairman");
-                        if(a == 1) { s = 80000; }
-                        if(b == 1) { s = 100000; }
+                    String sql = "select Is_Admin, Is_Chairman from account where Acc_No = '"+a+"'";
+                    pst1 = conn.prepareStatement(sql);
+                    rs1 = pst1.executeQuery();
+                    if(rs1.next()) {
+                        int ad = rs1.getInt("Is_Admin");
+                        int ch = rs1.getInt("Is_Chairman");
+                        if(ad == 1) { s = 80000; }
+                        if(ch == 1) { s = 100000; }
                     }
                 }
+                String q1 = "update account set Salary = '"+s+"' where Acc_No = '"+a+"'";
+                pst = conn.prepareStatement(q1);
+                pst.execute();
             }
-            String q1 = "update account set Salary = '"+s+"'";
-            pst = conn.prepareStatement(q1);
-            pst.execute();
         } catch (SQLException ex) {
             JOptionPane.showMessageDialog(null, ex);
         }
@@ -762,6 +763,7 @@ public class Home extends javax.swing.JFrame {
                         pst = conn.prepareStatement(q4);
                         pst.execute();
                         setUpInterestLogs(interest);
+                        initiate();
                     }
                 }
             }
@@ -783,13 +785,12 @@ public class Home extends javax.swing.JFrame {
                 int s = rs.getInt(2);
                 Duration duration = Duration.between(pDate, cDate);
                 long m = ChronoUnit.MONTHS.between(cDate, cDate.plus(duration));
-                System.out.println(m);
                 if(m > 0) {
                     LocalDateTime nDate = pDate.plusMonths(1); 
                     String q1 = "update balance set Balance = Balance + '"+s+"' where Account_No = '"+acc+"'";
                     pst = conn.prepareStatement(q1);
                     pst.execute();
-                    String q2 = "update account set Pay_Date = '"+nDate+"'";
+                    String q2 = "update account set Pay_Date = '"+nDate+"' where Acc_No = '"+acc+"'";
                     pst = conn.prepareStatement(q2);
                     pst.execute();
                     String q3 = "update bank set Funds = Funds - '"+s+"'";
@@ -797,6 +798,7 @@ public class Home extends javax.swing.JFrame {
                     pst.execute();
                     JOptionPane.showMessageDialog(null, "You have been credited with your salary");
                     setUpSalaryLogs(s);
+                    initiate();
                 }
             }
         } catch(Exception e) {
@@ -2073,7 +2075,7 @@ public class Home extends javax.swing.JFrame {
 
             },
             new String [] {
-                "A/C Number", "Name", "Gender", "IFSC Code"
+                "A/C Number", "Name", "Gender", "Designation"
             }
         ));
         HomeCustomerListTable.setGridColor(new java.awt.Color(0, 153, 204));
@@ -2474,7 +2476,7 @@ public class Home extends javax.swing.JFrame {
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel8, javax.swing.GroupLayout.PREFERRED_SIZE, 783, Short.MAX_VALUE)
+            .addComponent(jPanel8, javax.swing.GroupLayout.DEFAULT_SIZE, 783, Short.MAX_VALUE)
         );
 
         setSize(new java.awt.Dimension(804, 830));
@@ -2487,11 +2489,14 @@ public class Home extends javax.swing.JFrame {
 
     private void HomeManageSaveButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_HomeManageSaveButtonActionPerformed
         String d = (String)HomeManageDesignationComboBox.getSelectedItem();
-        String q = "update account set Designation = '"+d+"'";
+        String a = HomeManageTFAccNo.getText();
+        String q = "update account set Designation = '"+d+"' where Acc_No = '"+a+"'";
         try {
             pst = conn.prepareStatement(q);
             pst.execute();
             HomeManageDesignationComboBox.setEditable(false);
+            initiate();
+            JOptionPane.showMessageDialog(null, "Information updated successfully");
         } catch(Exception e) {
             JOptionPane.showMessageDialog(null, e);
         }
@@ -2508,6 +2513,8 @@ public class Home extends javax.swing.JFrame {
                 String q2 = "delete from account where Acc_No = '"+d+"'";
                 pst = conn.prepareStatement(q2);
                 pst.execute();
+                initiate();
+                JOptionPane.showMessageDialog(null, "Account deleted");
             } catch(Exception e) {
                 JOptionPane.showMessageDialog(null, e);
             }
@@ -2891,8 +2898,7 @@ public class Home extends javax.swing.JFrame {
     }//GEN-LAST:event_HomeLoanButtonActionPerformed
 
     private void HomeTransferButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_HomeTransferButtonActionPerformed
-        // Transfer Button
-
+        // Transfer
         String transferAmount = HomeTransTFTransAmount.getText();
         int transferAmountInt = Integer.parseInt(transferAmount);
 

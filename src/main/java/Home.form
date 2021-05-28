@@ -1992,7 +1992,7 @@
                             <Column editable="true" title="A/C Number" type="java.lang.Object"/>
                             <Column editable="true" title="Name" type="java.lang.Object"/>
                             <Column editable="true" title="Gender" type="java.lang.Object"/>
-                            <Column editable="true" title="IFSC Code" type="java.lang.Object"/>
+                            <Column editable="true" title="Designation" type="java.lang.Object"/>
                           </Table>
                         </Property>
                         <Property name="columnModel" type="javax.swing.table.TableColumnModel" editor="org.netbeans.modules.form.editors2.TableColumnModelEditor">
