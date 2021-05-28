@@ -18,6 +18,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.Random;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.event.DocumentEvent;
@@ -52,6 +54,7 @@ public class Home extends javax.swing.JFrame {
         getProfileInfo();
         getWithdrawInfo();
         getLoanInfo();
+        getManageAccountInfo();
         setUpTransfer();
         setUpDeposit();
         setUpWithdraw();
@@ -59,11 +62,14 @@ public class Home extends javax.swing.JFrame {
         setUpTransactionTable();
         setUpLoanRequestTable();
         setUpLoanTable();
+        setSalaries();
         informUser();
         adminControls();
         setUpAdminTable();
         getPayLoanInfo();
         addInterest();
+        addSalaries();
+        updateFunds();
     }
     
     private void setInfo() {
@@ -253,6 +259,20 @@ public class Home extends javax.swing.JFrame {
             } catch(Exception e) {
                 JOptionPane.showMessageDialog(null, e);
             }
+        }
+    }
+     
+    private void getManageAccountInfo() {
+        String sql = "select Funds from Bank";
+        try {
+            pst = conn.prepareStatement(sql);
+            rs = pst.executeQuery();
+            if(rs.next()) {
+                int f = rs.getInt(1);
+                jLabel62.setText("Funds: '"+f+"' Rs.");
+            }
+        } catch(Exception e) {
+            JOptionPane.showMessageDialog(null, e);
         }
     }
     
@@ -605,6 +625,46 @@ public class Home extends javax.swing.JFrame {
         }
     }
     
+    private void setSalaries() {
+        int s = 0;
+        String d;
+        String q = "select Designation from account where Acc_No = '"+acc+"'";
+        try {
+            pst = conn.prepareStatement(q);
+            rs = pst.executeQuery();
+            if(rs.next()) {
+                d = rs.getString(1);
+                if(d.equals("Non-Teaching Staff")) {
+                    s = 60000;
+                } else if(d.equals("Assistant Professor")) {
+                    s = 70000;
+                } else if(d.equals("Professor")) {
+                    s = 90000;
+                } else if(d.equals("Head of Department")) {
+                    s = 110000;
+                } else if(d.equals("Dean")) {
+                    s = 120000;
+                } else if(d.equals("Bank Employee")) {
+                    s = 65000;
+                    String sql = "select Is_Admin, Is_Chairman from account where Acc_No = '"+acc+"'";
+                    pst = conn.prepareStatement(sql);
+                    rs = pst.executeQuery();
+                    if(rs.next()) {
+                        int a = rs.getInt("Is_Admin");
+                        int b = rs.getInt("Is_Chairman");
+                        if(a == 1) { s = 80000; }
+                        if(b == 1) { s = 100000; }
+                    }
+                }
+            }
+            String q1 = "update account set Salary = '"+s+"'";
+            pst = conn.prepareStatement(q1);
+            pst.execute();
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(null, ex);
+        }
+    }    
+    
     public void informUser() {
         try {
             String sql = "select Info_Loan from account where Acc_No = '"+acc+"'";
@@ -653,6 +713,8 @@ public class Home extends javax.swing.JFrame {
                 }
                 if(b == 0) {
                     HomeTabbedPane.remove(jPanel13);
+                    HomeTabbedPane.remove(jPanel9);
+                    jLabel62.setVisible(false);
                 }
             }
         } catch(Exception e) {
@@ -699,7 +761,66 @@ public class Home extends javax.swing.JFrame {
                         String q4 = "update bank set Funds = Funds - '"+interest+"'";
                         pst = conn.prepareStatement(q4);
                         pst.execute();
+                        setUpInterestLogs(interest);
                     }
+                }
+            }
+        } catch(Exception e) {
+            JOptionPane.showMessageDialog(null, e);
+        }
+    }
+    
+    private void addSalaries() {
+        String currentDate = getDateTime();
+        DateTimeFormatter f = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        LocalDateTime cDate = LocalDateTime.parse(currentDate, f);
+        String q = "select Pay_Date, Salary from account where Acc_No = '"+acc+"'";
+        try {
+            pst = conn.prepareStatement(q);
+            rs = pst.executeQuery();
+            if(rs.next()) {
+                LocalDateTime pDate = rs.getTimestamp(1).toLocalDateTime();
+                int s = rs.getInt(2);
+                Duration duration = Duration.between(pDate, cDate);
+                long m = ChronoUnit.MONTHS.between(cDate, cDate.plus(duration));
+                System.out.println(m);
+                if(m > 0) {
+                    LocalDateTime nDate = pDate.plusMonths(1); 
+                    String q1 = "update balance set Balance = Balance + '"+s+"' where Account_No = '"+acc+"'";
+                    pst = conn.prepareStatement(q1);
+                    pst.execute();
+                    String q2 = "update account set Pay_Date = '"+nDate+"'";
+                    pst = conn.prepareStatement(q2);
+                    pst.execute();
+                    String q3 = "update bank set Funds = Funds - '"+s+"'";
+                    pst = conn.prepareStatement(q3);
+                    pst.execute();
+                    JOptionPane.showMessageDialog(null, "You have been credited with your salary");
+                    setUpSalaryLogs(s);
+                }
+            }
+        } catch(Exception e) {
+            JOptionPane.showMessageDialog(null, e);
+        }
+    }
+    
+    private void updateFunds() {
+        String currentDate = getDateTime();
+        DateTimeFormatter f = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        LocalDateTime cDate = LocalDateTime.parse(currentDate, f);
+        String q1 = "select Funds_Date from Bank";
+        try {
+            pst = conn.prepareStatement(q1);
+            rs = pst.executeQuery();
+            if(rs.next()) {
+                LocalDateTime fDate = rs.getTimestamp(1).toLocalDateTime();
+                Duration duration = Duration.between(fDate, cDate);
+                long m = ChronoUnit.MONTHS.between(cDate, cDate.plus(duration));
+                if(m > 0) {
+                    LocalDateTime nDate = fDate.plusMonths(1);
+                    String q = "update Bank set Funds = Funds + '"+15000000+"', Funds_Date = '"+nDate+"'";
+                    pst = conn.prepareStatement(q);
+                    pst.execute();
                 }
             }
         } catch(Exception e) {
@@ -782,6 +903,36 @@ public class Home extends javax.swing.JFrame {
         }  
     }
     
+    private void setUpSalaryLogs(int am) {
+        Random r = new Random();
+        String d = getDateTime();
+        String t = d.substring(2,4) + d.substring(5,7) + d.substring(8,10) + d.substring(11,13) + d.substring(14,16) + d.substring(17,19);
+        String id = "SL" + t + r.nextInt(1000+1);       
+        String type = "Salary";
+        String q2 = "insert into logs(ID, Type, Acc_No, Amount, Date) values('"+id+"', '"+type+"', '"+acc+"', '"+am+"', '"+d+"')";
+        try {
+            pst = conn.prepareStatement(q2);
+            pst.execute();
+        } catch(Exception e) {
+            JOptionPane.showMessageDialog(null, e);
+        }  
+    }
+    
+    private void setUpInterestLogs(int am) {
+        Random r = new Random();
+        String d = getDateTime();
+        String t = d.substring(2,4) + d.substring(5,7) + d.substring(8,10) + d.substring(11,13) + d.substring(14,16) + d.substring(17,19);
+        String id = "NL" + t + r.nextInt(1000+1);       
+        String type = "Interest";
+        String q2 = "insert into logs(ID, Type, Acc_No, Amount, Date) values('"+id+"', '"+type+"', '"+acc+"', '"+am+"', '"+d+"')";
+        try {
+            pst = conn.prepareStatement(q2);
+            pst.execute();
+        } catch(Exception e) {
+            JOptionPane.showMessageDialog(null, e);
+        }  
+    }
+    
     private void setFields() {
         HomeDepositTFAmount.setText("");
         HomeDepositTFAccNo.setEditable(true);
@@ -810,6 +961,13 @@ public class Home extends javax.swing.JFrame {
         HomePayLoanTFNextInstDate.setText("");
         HomePayLoanTFInstallmentAmount.setText("");
         HomePayLoanTFPin.setText("");
+        HomeManageTFAccNo.setEditable(true);
+        HomeManageTFName.setText("");
+        HomeManageTFIFSC.setText("");
+        HomeManageTFAccNo.setText("");
+        HomeManageTFSalary.setText("");
+        HomeManageDesignationComboBox.setEnabled(false);
+        HomeManageDesignationComboBox.setSelectedItem(null);
     }
     /**
      * This method is called from within the constructor to initialize the form.
@@ -956,9 +1114,23 @@ public class Home extends javax.swing.JFrame {
         HomeMakeAdminButton = new javax.swing.JButton();
         HomeAdminsEditButton = new javax.swing.JButton();
         jPanel9 = new javax.swing.JPanel();
-        jPanel15 = new javax.swing.JPanel();
+        HomeManageSearchButton = new javax.swing.JButton();
+        HomeManageDeleteButton = new javax.swing.JButton();
+        jLabel57 = new javax.swing.JLabel();
+        jLabel58 = new javax.swing.JLabel();
+        HomeManageTFAccNo = new javax.swing.JTextField();
+        HomeManageTFIFSC = new javax.swing.JTextField();
+        HomeManageTFName = new javax.swing.JTextField();
+        jLabel59 = new javax.swing.JLabel();
+        jLabel60 = new javax.swing.JLabel();
+        HomeManageTFSalary = new javax.swing.JTextField();
+        jLabel61 = new javax.swing.JLabel();
+        HomeManageSaveButton = new javax.swing.JButton();
+        HomeManageDesignationComboBox = new javax.swing.JComboBox<>();
+        HomeManageEditButton = new javax.swing.JButton();
         HomeTFDate = new javax.swing.JTextField();
         HomeRefreshButton = new javax.swing.JButton();
+        jLabel62 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setBackground(new java.awt.Color(230, 240, 245));
@@ -1053,7 +1225,7 @@ public class Home extends javax.swing.JFrame {
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                .addContainerGap(110, Short.MAX_VALUE)
+                .addContainerGap(97, Short.MAX_VALUE)
                 .addComponent(jLabel30)
                 .addGap(110, 110, 110))
             .addGroup(jPanel1Layout.createSequentialGroup()
@@ -1194,7 +1366,7 @@ public class Home extends javax.swing.JFrame {
                             .addGroup(jPanel2Layout.createSequentialGroup()
                                 .addGap(111, 111, 111)
                                 .addComponent(HomeWithdrawButton)))))
-                .addContainerGap(82, Short.MAX_VALUE))
+                .addContainerGap(69, Short.MAX_VALUE))
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1286,7 +1458,7 @@ public class Home extends javax.swing.JFrame {
             .addGroup(jPanel3Layout.createSequentialGroup()
                 .addGap(87, 87, 87)
                 .addComponent(jLabel32)
-                .addContainerGap(94, Short.MAX_VALUE))
+                .addContainerGap(81, Short.MAX_VALUE))
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1369,7 +1541,7 @@ public class Home extends javax.swing.JFrame {
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel4Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 581, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 568, Short.MAX_VALUE)
                 .addContainerGap())
             .addGroup(jPanel4Layout.createSequentialGroup()
                 .addGap(79, 79, 79)
@@ -1442,7 +1614,7 @@ public class Home extends javax.swing.JFrame {
         jPanel10Layout.setHorizontalGroup(
             jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel10Layout.createSequentialGroup()
-                .addContainerGap(148, Short.MAX_VALUE)
+                .addContainerGap(135, Short.MAX_VALUE)
                 .addGroup(jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel10Layout.createSequentialGroup()
                         .addGroup(jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1745,7 +1917,7 @@ public class Home extends javax.swing.JFrame {
         jPanel6Layout.setHorizontalGroup(
             jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel6Layout.createSequentialGroup()
-                .addContainerGap(123, Short.MAX_VALUE)
+                .addContainerGap(110, Short.MAX_VALUE)
                 .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel6Layout.createSequentialGroup()
                         .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1830,7 +2002,7 @@ public class Home extends javax.swing.JFrame {
             .addGroup(jPanel7Layout.createSequentialGroup()
                 .addGap(91, 91, 91)
                 .addComponent(jLabel49)
-                .addContainerGap(78, Short.MAX_VALUE))
+                .addContainerGap(65, Short.MAX_VALUE))
         );
         jPanel7Layout.setVerticalGroup(
             jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1872,7 +2044,7 @@ public class Home extends javax.swing.JFrame {
             jPanel11Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel11Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 581, Short.MAX_VALUE)
+                .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 568, Short.MAX_VALUE)
                 .addContainerGap())
             .addGroup(jPanel11Layout.createSequentialGroup()
                 .addGap(253, 253, 253)
@@ -1882,8 +2054,8 @@ public class Home extends javax.swing.JFrame {
         jPanel11Layout.setVerticalGroup(
             jPanel11Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel11Layout.createSequentialGroup()
-                .addContainerGap(114, Short.MAX_VALUE)
-                .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 383, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(127, Short.MAX_VALUE)
+                .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 370, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
                 .addComponent(HomeLoanRequestActionButton)
                 .addContainerGap())
@@ -1915,7 +2087,7 @@ public class Home extends javax.swing.JFrame {
             jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel5Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 581, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 568, Short.MAX_VALUE)
                 .addContainerGap())
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel5Layout.createSequentialGroup()
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -1956,7 +2128,7 @@ public class Home extends javax.swing.JFrame {
             jPanel12Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel12Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane5, javax.swing.GroupLayout.DEFAULT_SIZE, 581, Short.MAX_VALUE)
+                .addComponent(jScrollPane5, javax.swing.GroupLayout.DEFAULT_SIZE, 568, Short.MAX_VALUE)
                 .addContainerGap())
             .addGroup(jPanel12Layout.createSequentialGroup()
                 .addGap(201, 201, 201)
@@ -1988,6 +2160,7 @@ public class Home extends javax.swing.JFrame {
         HomeAdminsTFName.setEditable(false);
         HomeAdminsTFName.setFont(new java.awt.Font("Arial", 0, 16)); // NOI18N
 
+        HomeAdminsSearchButton.setIcon(new javax.swing.ImageIcon("C:\\Users\\Win 10 Pc\\Documents\\NetBeansProjects\\OOPCP\\Images\\search.gif")); // NOI18N
         HomeAdminsSearchButton.setText("Search");
         HomeAdminsSearchButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -2033,29 +2206,29 @@ public class Home extends javax.swing.JFrame {
                 .addGroup(jPanel13Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel13Layout.createSequentialGroup()
                         .addContainerGap()
-                        .addComponent(jScrollPane6, javax.swing.GroupLayout.DEFAULT_SIZE, 581, Short.MAX_VALUE))
+                        .addComponent(jScrollPane6, javax.swing.GroupLayout.DEFAULT_SIZE, 568, Short.MAX_VALUE))
                     .addGroup(jPanel13Layout.createSequentialGroup()
                         .addGap(121, 121, 121)
-                        .addGroup(jPanel13Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel13Layout.createSequentialGroup()
-                                .addGroup(jPanel13Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                    .addComponent(jLabel39, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                    .addComponent(jLabel40, javax.swing.GroupLayout.PREFERRED_SIZE, 115, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                .addGap(18, 18, 18)
-                                .addGroup(jPanel13Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                    .addComponent(HomeAdminsTFAccNo)
-                                    .addComponent(HomeAdminsTFName, javax.swing.GroupLayout.PREFERRED_SIZE, 155, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                .addGap(18, 18, 18)
-                                .addComponent(HomeAdminsSearchButton))
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel13Layout.createSequentialGroup()
-                                .addComponent(HomeMakeAdminButton)
-                                .addGap(116, 116, 116)))
+                        .addGroup(jPanel13Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(jLabel39, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(jLabel40, javax.swing.GroupLayout.PREFERRED_SIZE, 115, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(18, 18, 18)
+                        .addGroup(jPanel13Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(HomeAdminsTFAccNo)
+                            .addComponent(HomeAdminsTFName, javax.swing.GroupLayout.PREFERRED_SIZE, 155, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(18, 18, 18)
+                        .addComponent(HomeAdminsSearchButton)
                         .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel13Layout.createSequentialGroup()
                 .addGap(0, 0, Short.MAX_VALUE)
-                .addComponent(HomeAdminsEditButton, javax.swing.GroupLayout.PREFERRED_SIZE, 74, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(260, 260, 260))
+                .addGroup(jPanel13Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel13Layout.createSequentialGroup()
+                        .addComponent(HomeAdminsEditButton, javax.swing.GroupLayout.PREFERRED_SIZE, 74, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(260, 260, 260))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel13Layout.createSequentialGroup()
+                        .addComponent(HomeMakeAdminButton)
+                        .addGap(217, 217, 217))))
         );
         jPanel13Layout.setVerticalGroup(
             jPanel13Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -2072,39 +2245,153 @@ public class Home extends javax.swing.JFrame {
                 .addGap(18, 18, 18)
                 .addComponent(HomeMakeAdminButton)
                 .addGap(15, 15, 15)
-                .addComponent(jScrollPane6, javax.swing.GroupLayout.PREFERRED_SIZE, 350, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 27, Short.MAX_VALUE)
+                .addComponent(jScrollPane6, javax.swing.GroupLayout.DEFAULT_SIZE, 359, Short.MAX_VALUE)
+                .addGap(18, 18, 18)
                 .addComponent(HomeAdminsEditButton)
                 .addContainerGap())
         );
 
         HomeTabbedPane.addTab("Admins", jPanel13);
 
+        jPanel9.setBackground(new java.awt.Color(250, 250, 255));
+
+        HomeManageSearchButton.setFont(new java.awt.Font("Arial", 0, 15)); // NOI18N
+        HomeManageSearchButton.setIcon(new javax.swing.ImageIcon("C:\\Users\\Win 10 Pc\\Documents\\NetBeansProjects\\OOPCP\\Images\\search.gif")); // NOI18N
+        HomeManageSearchButton.setText("Search");
+        HomeManageSearchButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                HomeManageSearchButtonActionPerformed(evt);
+            }
+        });
+
+        HomeManageDeleteButton.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
+        HomeManageDeleteButton.setText("Delete Account");
+        HomeManageDeleteButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                HomeManageDeleteButtonActionPerformed(evt);
+            }
+        });
+
+        jLabel57.setFont(new java.awt.Font("Arial", 0, 16)); // NOI18N
+        jLabel57.setText("Account Number");
+
+        jLabel58.setFont(new java.awt.Font("Arial", 0, 16)); // NOI18N
+        jLabel58.setText("IFSC Code");
+
+        HomeManageTFAccNo.setFont(new java.awt.Font("Arial", 0, 16)); // NOI18N
+
+        HomeManageTFIFSC.setEditable(false);
+        HomeManageTFIFSC.setFont(new java.awt.Font("Arial", 0, 16)); // NOI18N
+
+        HomeManageTFName.setEditable(false);
+        HomeManageTFName.setFont(new java.awt.Font("Arial", 0, 16)); // NOI18N
+
+        jLabel59.setFont(new java.awt.Font("Arial", 0, 16)); // NOI18N
+        jLabel59.setText("Name");
+
+        jLabel60.setFont(new java.awt.Font("Arial", 0, 16)); // NOI18N
+        jLabel60.setText("Designation");
+
+        HomeManageTFSalary.setEditable(false);
+        HomeManageTFSalary.setFont(new java.awt.Font("Arial", 0, 16)); // NOI18N
+
+        jLabel61.setFont(new java.awt.Font("Arial", 0, 16)); // NOI18N
+        jLabel61.setText("Salary");
+
+        HomeManageSaveButton.setFont(new java.awt.Font("Arial", 0, 15)); // NOI18N
+        HomeManageSaveButton.setText("Save");
+        HomeManageSaveButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                HomeManageSaveButtonActionPerformed(evt);
+            }
+        });
+
+        HomeManageDesignationComboBox.setFont(new java.awt.Font("Arial", 0, 16)); // NOI18N
+        HomeManageDesignationComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Non-Teaching Staff", "Assistant Professor", "Professor", "Head of Department", "Dean", "Bank Employee" }));
+
+        HomeManageEditButton.setFont(new java.awt.Font("Arial", 0, 15)); // NOI18N
+        HomeManageEditButton.setText("Edit");
+        HomeManageEditButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                HomeManageEditButtonActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel9Layout = new javax.swing.GroupLayout(jPanel9);
         jPanel9.setLayout(jPanel9Layout);
         jPanel9Layout.setHorizontalGroup(
             jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 605, Short.MAX_VALUE)
+            .addGroup(jPanel9Layout.createSequentialGroup()
+                .addGap(68, 68, 68)
+                .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addGroup(jPanel9Layout.createSequentialGroup()
+                                .addComponent(jLabel60, javax.swing.GroupLayout.PREFERRED_SIZE, 115, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(173, 173, 173))
+                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel9Layout.createSequentialGroup()
+                                .addComponent(jLabel61, javax.swing.GroupLayout.PREFERRED_SIZE, 115, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(18, 18, 18)
+                                .addComponent(HomeManageTFSalary, javax.swing.GroupLayout.PREFERRED_SIZE, 155, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addGroup(jPanel9Layout.createSequentialGroup()
+                            .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                                .addComponent(HomeManageDesignationComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, 155, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel9Layout.createSequentialGroup()
+                                        .addComponent(jLabel59, javax.swing.GroupLayout.PREFERRED_SIZE, 115, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addGap(18, 18, 18)
+                                        .addComponent(HomeManageTFName, javax.swing.GroupLayout.PREFERRED_SIZE, 155, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                    .addGroup(jPanel9Layout.createSequentialGroup()
+                                        .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                            .addComponent(jLabel57, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                            .addComponent(jLabel58, javax.swing.GroupLayout.PREFERRED_SIZE, 115, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                        .addGap(18, 18, 18)
+                                        .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                            .addComponent(HomeManageTFAccNo)
+                                            .addComponent(HomeManageTFIFSC, javax.swing.GroupLayout.PREFERRED_SIZE, 155, javax.swing.GroupLayout.PREFERRED_SIZE)))))
+                            .addGap(18, 18, 18)
+                            .addComponent(HomeManageSearchButton)))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel9Layout.createSequentialGroup()
+                        .addComponent(HomeManageEditButton, javax.swing.GroupLayout.PREFERRED_SIZE, 99, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(63, 63, 63)
+                        .addComponent(HomeManageSaveButton, javax.swing.GroupLayout.PREFERRED_SIZE, 98, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(62, 62, 62)
+                        .addComponent(HomeManageDeleteButton, javax.swing.GroupLayout.PREFERRED_SIZE, 129, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap(73, Short.MAX_VALUE))
         );
         jPanel9Layout.setVerticalGroup(
             jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 555, Short.MAX_VALUE)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel9Layout.createSequentialGroup()
+                .addContainerGap(221, Short.MAX_VALUE)
+                .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel57)
+                    .addComponent(HomeManageTFAccNo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(HomeManageSearchButton))
+                .addGap(18, 18, 18)
+                .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel58)
+                    .addComponent(HomeManageTFIFSC, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(18, 18, 18)
+                .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel59)
+                    .addComponent(HomeManageTFName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(18, 18, 18)
+                .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel60)
+                    .addComponent(HomeManageDesignationComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(18, 18, 18)
+                .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel61)
+                    .addComponent(HomeManageTFSalary, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(61, 61, 61)
+                .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(HomeManageDeleteButton, javax.swing.GroupLayout.PREFERRED_SIZE, 27, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(HomeManageSaveButton)
+                    .addComponent(HomeManageEditButton))
+                .addGap(47, 47, 47))
         );
 
-        HomeTabbedPane.addTab("Delete Accounts", jPanel9);
-
-        javax.swing.GroupLayout jPanel15Layout = new javax.swing.GroupLayout(jPanel15);
-        jPanel15.setLayout(jPanel15Layout);
-        jPanel15Layout.setHorizontalGroup(
-            jPanel15Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 605, Short.MAX_VALUE)
-        );
-        jPanel15Layout.setVerticalGroup(
-            jPanel15Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 555, Short.MAX_VALUE)
-        );
-
-        HomeTabbedPane.addTab("Salary", jPanel15);
+        HomeTabbedPane.addTab("Manage Accounts", jPanel9);
 
         HomeTFDate.setEditable(false);
         HomeTFDate.setFont(new java.awt.Font("Arial", 0, 18)); // NOI18N
@@ -2118,6 +2405,10 @@ public class Home extends javax.swing.JFrame {
             }
         });
 
+        jLabel62.setFont(new java.awt.Font("Arial", 0, 18)); // NOI18N
+        jLabel62.setForeground(new java.awt.Color(51, 153, 255));
+        jLabel62.setText("Funds: XXXXXXX Rs.");
+
         javax.swing.GroupLayout jPanel8Layout = new javax.swing.GroupLayout(jPanel8);
         jPanel8.setLayout(jPanel8Layout);
         jPanel8Layout.setHorizontalGroup(
@@ -2130,20 +2421,22 @@ public class Home extends javax.swing.JFrame {
                         .addComponent(jLabel1)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel8Layout.createSequentialGroup()
-                                .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 44, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(18, 18, 18)
-                                .addComponent(HomeTFDate, javax.swing.GroupLayout.PREFERRED_SIZE, 130, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel8Layout.createSequentialGroup()
-                                .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(jLabel13)
-                                    .addComponent(jLabel12))
-                                .addGap(18, 18, 18)
-                                .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                    .addComponent(HomeTFACNo)
-                                    .addComponent(HomeTFIFSC, javax.swing.GroupLayout.PREFERRED_SIZE, 140, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                .addGap(32, 32, 32)
-                                .addComponent(HomeRefreshButton)))
+                            .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel8Layout.createSequentialGroup()
+                                    .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 44, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addGap(18, 18, 18)
+                                    .addComponent(HomeTFDate, javax.swing.GroupLayout.PREFERRED_SIZE, 130, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel8Layout.createSequentialGroup()
+                                    .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addComponent(jLabel13)
+                                        .addComponent(jLabel12))
+                                    .addGap(18, 18, 18)
+                                    .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                        .addComponent(HomeTFACNo)
+                                        .addComponent(HomeTFIFSC, javax.swing.GroupLayout.PREFERRED_SIZE, 140, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                    .addGap(32, 32, 32)
+                                    .addComponent(HomeRefreshButton)))
+                            .addComponent(jLabel62))
                         .addGap(20, 20, 20)))
                 .addContainerGap())
         );
@@ -2151,12 +2444,14 @@ public class Home extends javax.swing.JFrame {
             jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel8Layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel8Layout.createSequentialGroup()
+                .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addGroup(jPanel8Layout.createSequentialGroup()
                         .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(HomeTFDate, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(jLabel3))
-                        .addGap(54, 54, 54)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jLabel62)
+                        .addGap(30, 30, 30)
                         .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel12)
                             .addComponent(HomeTFACNo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -2185,6 +2480,202 @@ public class Home extends javax.swing.JFrame {
         setSize(new java.awt.Dimension(804, 830));
         setLocationRelativeTo(null);
     }// </editor-fold>//GEN-END:initComponents
+
+    private void HomeRefreshButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_HomeRefreshButtonActionPerformed
+        initiate();
+    }//GEN-LAST:event_HomeRefreshButtonActionPerformed
+
+    private void HomeManageSaveButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_HomeManageSaveButtonActionPerformed
+        String d = (String)HomeManageDesignationComboBox.getSelectedItem();
+        String q = "update account set Designation = '"+d+"'";
+        try {
+            pst = conn.prepareStatement(q);
+            pst.execute();
+            HomeManageDesignationComboBox.setEditable(false);
+        } catch(Exception e) {
+            JOptionPane.showMessageDialog(null, e);
+        }
+    }//GEN-LAST:event_HomeManageSaveButtonActionPerformed
+
+    private void HomeManageDeleteButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_HomeManageDeleteButtonActionPerformed
+        String d = HomeManageTFAccNo.getText();
+        int res = JOptionPane.showConfirmDialog(null, "Are you sure that you want to delete this account", "Confirmation", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+        if(res == JOptionPane.YES_OPTION) {
+            try {
+                String q1 = "delete from balance where Account_No = '"+d+"'";
+                pst = conn.prepareStatement(q1);
+                pst.execute();
+                String q2 = "delete from account where Acc_No = '"+d+"'";
+                pst = conn.prepareStatement(q2);
+                pst.execute();
+            } catch(Exception e) {
+                JOptionPane.showMessageDialog(null, e);
+            }
+        } else {
+            JOptionPane.getRootFrame().dispose();
+        }
+    }//GEN-LAST:event_HomeManageDeleteButtonActionPerformed
+
+    private void HomeManageSearchButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_HomeManageSearchButtonActionPerformed
+        String accNo = HomeManageTFAccNo.getText();
+        if(accNo.equals(acc)) {
+            JOptionPane.showMessageDialog(null, "You cannot enter your own account number");
+        }
+        else {
+            String sql = "select First_Name, Last_Name, IFSC_Code, Designation, Salary from account where Acc_No = '"+accNo+"'";
+            try {
+                pst = conn.prepareStatement(sql);
+                rs = pst.executeQuery();
+                if(rs.next()) {
+                    HomeManageTFName.setText(rs.getString("First_Name") + " " + rs.getString("Last_Name"));
+                    HomeManageTFIFSC.setText(rs.getString("IFSC_Code"));
+                    HomeManageDesignationComboBox.setSelectedItem(rs.getString("Designation"));
+                    HomeManageTFSalary.setText(String.valueOf(rs.getInt("Salary")));
+                    HomeManageTFAccNo.setEditable(false);
+                } else {
+                    JOptionPane.showMessageDialog(null, "Invalid Account Number");
+                    HomeManageTFAccNo.setEditable(true);
+                }
+            } catch(Exception e) {
+                JOptionPane.showMessageDialog(null, e);
+            }
+        }
+    }//GEN-LAST:event_HomeManageSearchButtonActionPerformed
+
+    private void HomeAdminsEditButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_HomeAdminsEditButtonActionPerformed
+        try {
+            String sql = "select Acc_No, First_Name, Last_Name from account where Is_Admin = '"+1+"'";
+            pst = conn.prepareStatement(sql);
+            rs = pst.executeQuery();
+            while(rs.next()) {
+                int a = rs.getInt(1);
+                String f = rs.getString(2);
+                String l = rs.getString(3);
+                int res = JOptionPane.showConfirmDialog(null, "Account Number: "+a+"  Name: "+f+" "+l+"\nRemove from Admins?","Manage Admins",JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+                if(res == JOptionPane.YES_OPTION) {
+                    try {
+                        String q = "Update account set Is_Admin = '"+0+"' where Acc_No = '"+a+"'";
+                        pst = conn.prepareStatement(q);
+                        pst.execute();
+                        initiate();
+                    } catch(Exception e) {
+                        JOptionPane.showMessageDialog(null, e);
+                    }
+                }  else if (res == JOptionPane.NO_OPTION) {
+                    JOptionPane.getRootFrame().dispose();
+                }
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, e);
+        }
+    }//GEN-LAST:event_HomeAdminsEditButtonActionPerformed
+
+    private void HomeMakeAdminButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_HomeMakeAdminButtonActionPerformed
+        String a = HomeAdminsTFAccNo.getText();
+        try {
+            String q = "update account set Is_Admin = '"+1+"' where Acc_No = '"+a+"'";
+            pst = conn.prepareStatement(q);
+            pst.execute();
+            JOptionPane.showMessageDialog(null, "Admin Added Successfully");
+            initiate();
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, e);
+        }
+    }//GEN-LAST:event_HomeMakeAdminButtonActionPerformed
+
+    private void HomeAdminsSearchButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_HomeAdminsSearchButtonActionPerformed
+        String a = HomeAdminsTFAccNo.getText();
+        try {
+            String q = "select First_Name, Last_Name, Is_Admin from account where Acc_No = '"+a+"'";
+            pst = conn.prepareStatement(q);
+            rs = pst.executeQuery();
+            if(rs.next()) {
+                String f = rs.getString("First_Name");
+                String l = rs.getString("Last_Name");
+                int ad = rs.getInt("Is_Admin");
+                if(ad == 0) {
+                    HomeAdminsTFName.setText(f + " " + l);
+                    HomeAdminsTFAccNo.setEditable(false);
+                    HomeMakeAdminButton.setEnabled(true);
+                } else {
+                    JOptionPane.showMessageDialog(null, "Entered account's holder is already an admin");
+                    HomeAdminsTFAccNo.setText("");
+                    HomeAdminsTFName.setText("");
+                }
+            } else {
+                JOptionPane.showMessageDialog(null, "Invalid Account Number");
+                HomeMakeAdminButton.setEnabled(false);
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, e);
+        }
+    }//GEN-LAST:event_HomeAdminsSearchButtonActionPerformed
+
+    private void HomeLoanRequestActionButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_HomeLoanRequestActionButtonActionPerformed
+        // Action on Loan
+        try {
+            String sql = "select Acc_No, First_Name, Last_Name, Loan_Amount, Loan_Duration from account where Applied_For_Loan = '"+1+"'";
+            pst = conn.prepareStatement(sql);
+            rs = pst.executeQuery();
+            while(rs.next()) {
+                int a = rs.getInt(1);
+                String f = rs.getString(2);
+                String l = rs.getString(3);
+                int am = rs.getInt(4);
+                int yr = rs.getInt(5);
+                int res = JOptionPane.showConfirmDialog(null, "Account Number: "+a+"  Name: "+f+" "+l+"\nLoan Amount: "+am+"    Loan Duration: "+yr+"years"+"\nDo you want to approve the loan request?","Verify loan requests",JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+                if(res == JOptionPane.YES_OPTION) {
+                    try {
+                        String q1 = "select Balance from balance where Account_No = '"+a+"'";
+                        pst1 = conn.prepareStatement(q1);
+                        rs1 = pst1.executeQuery();
+                        if(rs1.next()) {
+                            String q4 = "select Funds from bank";
+                            pst1 = conn.prepareStatement(q4);
+                            rs1 = pst1.executeQuery();
+                            if(rs1.next()) {
+                                int funds = rs1.getInt("Funds");
+                                int ba = rs1.getInt("Balance");
+                                int lam = am;
+                                int newBal = ba + lam;
+                                String bal = String.valueOf(newBal);
+                                int newFunds = funds - lam;
+                                if(newFunds > 5000000) {
+                                    String q5 = "update bank set Funds = '"+newFunds+"'";
+                                    pst1 = conn.prepareStatement(q5);
+                                    pst1.execute();
+                                    String q2 = "update balance set Balance = '"+bal+"' where Account_No = '"+a+"'";
+                                    pst1 = conn.prepareStatement(q2);
+                                    pst1.execute();
+                                    String dateTime = getDateTime();
+                                    String q3 = "update account set Applied_For_Loan = '"+0+"', Is_Loan_Pending = '"+1+"', Info_Loan = '"+1+"', Loan_Approve_Date = '"+dateTime+"', Current_Installment = '"+1+"' where Acc_No = '"+a+"'";
+                                    pst1 = conn.prepareStatement(q3);
+                                    pst1.execute();
+                                    setUpLoanLogs(lam,a);
+                                    initiate();
+                                } else {
+                                    JOptionPane.showMessageDialog(null, "Failed to issue loan: Low Funds");
+                                }
+                            }
+                        } else {
+                            JOptionPane.showMessageDialog(null, "Unexpected Error");
+                        }
+                    } catch(Exception e) {
+                        JOptionPane.showMessageDialog(null, e);
+                    }
+                } else if (res == JOptionPane.NO_OPTION){
+                    String q3 = "update account set Applied_For_Loan = '"+0+"', Info_Loan = '"+2+"', Loan_Amount = '"+0+"' where Acc_No = '"+a+"'";
+                    pst1 = conn.prepareStatement(q3);
+                    pst1.execute();
+                    initiate();
+                } else if (res == JOptionPane.CANCEL_OPTION) {
+                    JOptionPane.getRootFrame().dispose();
+                }
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, e);
+        }
+    }//GEN-LAST:event_HomeLoanRequestActionButtonActionPerformed
 
     private void HomeProfSaveButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_HomeProfSaveButtonActionPerformed
 
@@ -2215,6 +2706,189 @@ public class Home extends javax.swing.JFrame {
         HomeProfTFMobileNum.setEditable(true);
         HomeProfTFAddress.setEditable(true);
     }//GEN-LAST:event_HomeProfEditButtonActionPerformed
+
+    private void HomePayLoanPayEarlyButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_HomePayLoanPayEarlyButtonActionPerformed
+        String sql = "select * from account where Acc_No = '"+acc+"'";
+        try {
+            pst = conn.prepareStatement(sql);;
+            rs = pst.executeQuery();
+            if(rs.next()) {
+                int p = rs.getInt("Is_Loan_Pending");
+                if(p == 1) {
+                    int d = rs.getInt("Loan_Duration");
+                    int am = rs.getInt("Loan_Amount");
+                    double pam = am + (am * d * 0.13);
+                    int finalAmount,  amountPaid, amountToPay;
+                    String currentDate = getDateTime();
+                    DateTimeFormatter f = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+                    LocalDateTime cDate = LocalDateTime.parse(currentDate, f);
+                    LocalDateTime lDate = rs.getTimestamp("Loan_Approve_Date").toLocalDateTime();
+                    LocalDateTime dDate = lDate.plusYears(d);
+                    if(cDate.isBefore(dDate)) {
+                        Duration duration = Duration.between(cDate, dDate);
+                        long y = ChronoUnit.YEARS.between(cDate, cDate.plus(duration));
+                        amountPaid = (int)((rs.getInt("Current_Installment") - 1) * (pam / (d * 12)));
+                        finalAmount = (int)(am + (y * am * 0.13 + (d - y) * am * 0.05));
+                        amountToPay = finalAmount - amountPaid;
+                        int res = JOptionPane.showConfirmDialog(null, "Early settlement amount: "+amountToPay+" Rs.\nDo you want to settle your loan?","Pay Loan in advance",JOptionPane.YES_NO_OPTION,JOptionPane.QUESTION_MESSAGE);
+                        if(res == JOptionPane.YES_OPTION) {
+                            String q = "select Balance from balance where Account_No = '"+acc+"'";
+                            try {
+                                pst = conn.prepareStatement(q);
+                                rs = pst.executeQuery();
+                                if(rs.next()) {
+                                    int bal = rs.getInt("Balance");
+                                    if(bal > amountToPay) {
+                                        int newbal = bal - amountToPay;
+                                        String q1 = "update balance set Balance = '"+newbal+"' where Account_No = '"+acc+"'";
+                                        pst = conn.prepareStatement(q1);
+                                        pst.execute();
+                                        setUpLoanEarlySettlementLogs(amountToPay);
+                                        String q11 = "select Baseline_Bal from account where Acc_No = '"+acc+"'";
+                                        pst = conn.prepareStatement(q11);
+                                        rs = pst.executeQuery();
+                                        if(rs.next()) {
+                                            int baselineBal = rs.getInt(1);
+                                            if(baselineBal > newbal) {
+                                                String q12 = "update account set Non_Maintenance = '"+1+"' where Acc_No = '"+acc+"'";
+                                                pst = conn.prepareStatement(q12);
+                                                pst.execute();
+                                            }
+                                        }
+                                        String q4 = "select Funds from bank";
+                                        pst = conn.prepareStatement(q4);
+                                        rs = pst.executeQuery();
+                                        if(rs.next()) {
+                                            int newFunds = rs.getInt("Funds") + amountToPay;
+                                            String q2 = "update bank set Funds = '"+newFunds+"'";
+                                            pst = conn.prepareStatement(q2);
+                                            pst.execute();
+                                            JOptionPane.showMessageDialog(null, "Loan repayment successful");
+                                            String q3 = "update account set Is_Loan_Pending = '"+0+"', Loan_Amount = '"+0+"', Loan_Duration = '"+0+"', Is_Loan_Pending = '"+0+"', Current_Installment = '"+0+"' where Acc_No = '"+acc+"'";
+                                            pst = conn.prepareStatement(q3);
+                                            pst.execute();
+                                            initiate();
+                                        }
+                                    } else {
+                                        JOptionPane.showMessageDialog(null, "Not enough balance");
+                                    }
+                                }
+                            } catch(Exception e) {
+                                JOptionPane.showMessageDialog(null, e);
+                            }
+                        } else if(res == JOptionPane.NO_OPTION) {
+
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, e);
+        }
+    }//GEN-LAST:event_HomePayLoanPayEarlyButtonActionPerformed
+
+    private void HomePayLoanPayInstallmentButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_HomePayLoanPayInstallmentButtonActionPerformed
+        // Pay Loan button
+        if(HomePayLoanTFPin.getText().equals("")) {
+            JOptionPane.showMessageDialog(null, "Please enter the pin");
+        }
+        else {
+            String sql = "select Pin from account where Acc_No = '"+acc+"'";
+            try {
+                pst = conn.prepareStatement(sql);
+                rs = pst.executeQuery();
+                if(rs.next()) {
+                    int p = rs.getInt("Pin");
+                    if(p == Integer.parseInt(HomePayLoanTFPin.getText())) {
+                        String q = "select Balance from balance where Account_No = '"+acc+"'";
+                        try {
+                            pst = conn.prepareStatement(q);
+                            rs = pst.executeQuery();
+                            if(rs.next()) {
+                                int bal = rs.getInt("Balance");
+                                double pamD = Double.parseDouble(HomePayLoanTFInstallmentAmount.getText());
+                                int pam = (int)pamD;
+                                if(bal > pam) {
+                                    int newbal = bal - pam;
+                                    String q1 = "update balance set Balance = '"+newbal+"' where Account_No = '"+acc+"'";
+                                    pst = conn.prepareStatement(q1);
+                                    pst.execute();
+                                    String q11 = "select Baseline_Bal from account where Acc_No = '"+acc+"'";
+                                    pst = conn.prepareStatement(q11);
+                                    rs = pst.executeQuery();
+                                    if(rs.next()) {
+                                        int baselineBal = rs.getInt(1);
+                                        if(baselineBal > newbal) {
+                                            String q12 = "update account set Non_Maintenance = '"+1+"' where Acc_No = '"+acc+"'";
+                                            pst = conn.prepareStatement(q12);
+                                            pst.execute();
+                                        }
+                                    }
+                                    setUpLoanInstallmentLogs(pam);
+                                    String q5 = "update account set Current_Installment = Current_Installment+1 where Acc_No = '"+acc+"'";
+                                    pst = conn.prepareStatement(q5);
+                                    pst.execute();
+                                    String q4 = "select Funds from bank";
+                                    pst = conn.prepareStatement(q4);
+                                    rs = pst.executeQuery();
+                                    if(rs.next()) {
+                                        int newFunds = rs.getInt("Funds") + pam;
+                                        String q2 = "update bank set Funds = '"+newFunds+"'";
+                                        pst = conn.prepareStatement(q2);
+                                        pst.execute();
+                                        JOptionPane.showMessageDialog(null, "Loan installment paid successfully");
+                                        String q6 = "select Current_Installment, Loan_Duration from account where Acc_No = '"+acc+"'";
+                                        pst = conn.prepareStatement(q6);
+                                        rs = pst.executeQuery();
+                                        if(rs.next()) {
+                                            int ci = rs.getInt(1);
+                                            int ti = rs.getInt(2) * 12;
+                                            if(ci > ti) {
+                                                String q3 = "update account set Is_Loan_Pending = '"+0+"' where Acc_No = '"+acc+"'";
+                                                pst = conn.prepareStatement(q3);
+                                                pst.execute();
+                                                JOptionPane.showMessageDialog(null, "Loan amount repayment completed");
+                                            }
+                                        }
+                                        initiate();
+                                    }
+                                } else {
+                                    JOptionPane.showMessageDialog(null, "Not enough balance");
+                                }
+                            }
+                        } catch(Exception e) {
+                            JOptionPane.showMessageDialog(null, e);
+                        }
+                    } else {
+                        JOptionPane.showMessageDialog(null, "Incorrect pin");
+                    }
+                }
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(null, ex);
+            }
+        }
+    }//GEN-LAST:event_HomePayLoanPayInstallmentButtonActionPerformed
+
+    private void HomeLoanButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_HomeLoanButtonActionPerformed
+        // Apply Loan
+        try {
+            int am = Integer.parseInt(HomeAmountTFAmount.getText());
+            int yr = Integer.parseInt(HomeLoanTFDuration.getText());
+            if(am > 10000 && yr > 0) {
+                String sql = "update account set Applied_For_Loan = '"+1+"', Loan_Amount = '"+am+"', Loan_Duration = '"+yr+"' where Acc_No = '"+acc+"'";
+                pst = conn.prepareStatement(sql);
+                pst.execute();
+                JOptionPane.showMessageDialog(null, "Bank will verify your loan application and get back to you shortly");
+                getLoanInfo();
+            }
+            else {
+                JOptionPane.showMessageDialog(null, "Please enter a valid amount");
+                HomeDepositTFAmount.setText("");
+            }
+        } catch(Exception e) {
+            JOptionPane.showMessageDialog(null, e);
+        }
+    }//GEN-LAST:event_HomeLoanButtonActionPerformed
 
     private void HomeTransferButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_HomeTransferButtonActionPerformed
         // Transfer Button
@@ -2251,7 +2925,7 @@ public class Home extends javax.swing.JFrame {
                                     try {
                                         pst = conn.prepareStatement(q2);
                                         pst.execute();
-                                        
+
                                         String q11 = "select Baseline_Bal from account where Acc_No = '"+acc+"'";
                                         pst = conn.prepareStatement(q11);
                                         rs = pst.executeQuery();
@@ -2372,6 +3046,32 @@ public class Home extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_HomeWithdrawButtonActionPerformed
 
+    private void HomeDepositSearchButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_HomeDepositSearchButtonActionPerformed
+        String accNo = HomeDepositTFAccNo.getText();
+        if(accNo.equals(acc)) {
+            JOptionPane.showMessageDialog(null, "You cannot enter your own account number");
+        }
+        else {
+            String sql = "select First_Name, Last_Name, IFSC_Code, Balance from balance where Account_No = '"+accNo+"'";
+            try {
+                pst = conn.prepareStatement(sql);
+                rs = pst.executeQuery();
+                if(rs.next()) {
+                    HomeDepositTFFName.setText(rs.getString("First_Name"));
+                    HomeDepositTFLName.setText(rs.getString("Last_Name"));
+                    HomeDepositTFIFSCCode.setText(rs.getString("IFSC_Code"));
+                    HomeDepositTFBal.setText(rs.getString("Balance"));
+                    HomeDepositTFAccNo.setEditable(false);
+                } else {
+                    JOptionPane.showMessageDialog(null, "Invalid Account Number");
+                    HomeDepositTFAccNo.setEditable(true);
+                }
+            } catch(Exception e) {
+                JOptionPane.showMessageDialog(null, e);
+            }
+        }
+    }//GEN-LAST:event_HomeDepositSearchButtonActionPerformed
+
     private void HomeDepositButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_HomeDepositButtonActionPerformed
         try {
             int dep = Integer.parseInt(HomeDepositTFAmount.getText());
@@ -2393,350 +3093,9 @@ public class Home extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_HomeDepositButtonActionPerformed
 
-    private void HomeRefreshButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_HomeRefreshButtonActionPerformed
-        initiate();
-    }//GEN-LAST:event_HomeRefreshButtonActionPerformed
-
-    private void HomeLoanButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_HomeLoanButtonActionPerformed
-        // Apply Loan
-        try {
-            int am = Integer.parseInt(HomeAmountTFAmount.getText());
-            int yr = Integer.parseInt(HomeLoanTFDuration.getText());
-            if(am > 10000 && yr > 0) {
-                String sql = "update account set Applied_For_Loan = '"+1+"', Loan_Amount = '"+am+"', Loan_Duration = '"+yr+"' where Acc_No = '"+acc+"'";
-                pst = conn.prepareStatement(sql);
-                pst.execute();
-                JOptionPane.showMessageDialog(null, "Bank will verify your loan application and get back to you shortly");
-                getLoanInfo();
-            }
-            else {
-                JOptionPane.showMessageDialog(null, "Please enter a valid amount");
-                HomeDepositTFAmount.setText("");
-            }
-        } catch(Exception e) {
-            JOptionPane.showMessageDialog(null, e);
-        }
-    }//GEN-LAST:event_HomeLoanButtonActionPerformed
-
-    private void HomeLoanRequestActionButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_HomeLoanRequestActionButtonActionPerformed
-        // Action on Loan
-        try {
-            String sql = "select Acc_No, First_Name, Last_Name, Loan_Amount, Loan_Duration from account where Applied_For_Loan = '"+1+"'";
-            pst = conn.prepareStatement(sql);
-            rs = pst.executeQuery();
-            while(rs.next()) {
-                int a = rs.getInt(1);
-                String f = rs.getString(2);
-                String l = rs.getString(3);
-                int am = rs.getInt(4);
-                int yr = rs.getInt(5);
-                int res = JOptionPane.showConfirmDialog(null, "Account Number: "+a+"  Name: "+f+" "+l+"\nLoan Amount: "+am+"    Loan Duration: "+yr+"years"+"\nDo you want to approve the loan request?","Verify loan requests",JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
-                if(res == JOptionPane.YES_OPTION) {
-                    try {
-                        String q1 = "select Balance from balance where Account_No = '"+a+"'";
-                        pst1 = conn.prepareStatement(q1);
-                        rs1 = pst1.executeQuery();
-                        if(rs1.next()) {
-                            int ba = rs1.getInt("Balance");
-                            int lam = am;
-                            int newBal = ba + lam;
-                            String bal = String.valueOf(newBal);
-                            String q2 = "update balance set Balance = '"+bal+"' where Account_No = '"+a+"'";
-                            pst1 = conn.prepareStatement(q2);
-                            pst1.execute();
-                            String dateTime = getDateTime();
-                            String q3 = "update account set Applied_For_Loan = '"+0+"', Is_Loan_Pending = '"+1+"', Info_Loan = '"+1+"', Loan_Approve_Date = '"+dateTime+"', Current_Installment = '"+1+"' where Acc_No = '"+a+"'";
-                            pst1 = conn.prepareStatement(q3);
-                            pst1.execute();
-                            String q4 = "select Funds from bank";
-                            pst1 = conn.prepareStatement(q4);
-                            rs1 = pst1.executeQuery();
-                            if(rs1.next()) {
-                                int funds = rs1.getInt("Funds");
-                                int newFunds = funds - lam;
-                                String q5 = "update bank set Funds = '"+newFunds+"'";
-                                pst1 = conn.prepareStatement(q5);
-                                pst1.execute();
-                            }
-                            setUpLoanLogs(lam,a);
-                            initiate();
-                        } else {
-                            JOptionPane.showMessageDialog(null, "Unexpected Error");
-                        }
-                    } catch(Exception e) {
-                        JOptionPane.showMessageDialog(null, e);
-                    }
-                } else if (res == JOptionPane.NO_OPTION){
-                    String q3 = "update account set Applied_For_Loan = '"+0+"', Info_Loan = '"+2+"', Loan_Amount = '"+0+"' where Acc_No = '"+a+"'";
-                    pst1 = conn.prepareStatement(q3);
-                    pst1.execute();
-                    initiate();
-                } else if (res == JOptionPane.CANCEL_OPTION) {
-                    JOptionPane.getRootFrame().dispose();
-                }
-            }
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(null, e);
-        }
-    }//GEN-LAST:event_HomeLoanRequestActionButtonActionPerformed
-
-    private void HomePayLoanPayInstallmentButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_HomePayLoanPayInstallmentButtonActionPerformed
-        // Pay Loan button
-        if(HomePayLoanTFPin.getText().equals("")) {
-            JOptionPane.showMessageDialog(null, "Please enter the pin");
-        }
-        else {
-            String sql = "select Pin from account where Acc_No = '"+acc+"'";
-            try {
-                pst = conn.prepareStatement(sql);
-                rs = pst.executeQuery();
-                if(rs.next()) {
-                    int p = rs.getInt("Pin");
-                    if(p == Integer.parseInt(HomePayLoanTFPin.getText())) {
-                        String q = "select Balance from balance where Account_No = '"+acc+"'";
-                        try {
-                            pst = conn.prepareStatement(q);
-                            rs = pst.executeQuery();
-                            if(rs.next()) {
-                                int bal = rs.getInt("Balance");
-                                double pamD = Double.parseDouble(HomePayLoanTFInstallmentAmount.getText());
-                                int pam = (int)pamD;
-                                if(bal > pam) {
-                                    int newbal = bal - pam;
-                                    String q1 = "update balance set Balance = '"+newbal+"' where Account_No = '"+acc+"'";
-                                    pst = conn.prepareStatement(q1);
-                                    pst.execute();
-                                    String q11 = "select Baseline_Bal from account where Acc_No = '"+acc+"'";
-                                    pst = conn.prepareStatement(q11);
-                                    rs = pst.executeQuery();
-                                    if(rs.next()) {
-                                        int baselineBal = rs.getInt(1);
-                                        if(baselineBal > newbal) {
-                                            String q12 = "update account set Non_Maintenance = '"+1+"' where Acc_No = '"+acc+"'";
-                                            pst = conn.prepareStatement(q12);
-                                            pst.execute();
-                                        }
-                                    }
-                                    setUpLoanInstallmentLogs(pam);
-                                    String q5 = "update account set Current_Installment = Current_Installment+1 where Acc_No = '"+acc+"'";
-                                    pst = conn.prepareStatement(q5);
-                                    pst.execute();
-                                    String q4 = "select Funds from bank";
-                                    pst = conn.prepareStatement(q4);
-                                    rs = pst.executeQuery();
-                                    if(rs.next()) {
-                                        int newFunds = rs.getInt("Funds") + pam;
-                                        String q2 = "update bank set Funds = '"+newFunds+"'";
-                                        pst = conn.prepareStatement(q2);
-                                        pst.execute();
-                                        JOptionPane.showMessageDialog(null, "Loan installment paid successfully");
-                                        String q6 = "select Current_Installment, Loan_Duration from account where Acc_No = '"+acc+"'";
-                                        pst = conn.prepareStatement(q6);
-                                        rs = pst.executeQuery();
-                                        if(rs.next()) {
-                                            int ci = rs.getInt(1);
-                                            int ti = rs.getInt(2) * 12;
-                                            if(ci > ti) {
-                                                String q3 = "update account set Is_Loan_Pending = '"+0+"' where Acc_No = '"+acc+"'";
-                                                pst = conn.prepareStatement(q3);
-                                                pst.execute();
-                                                JOptionPane.showMessageDialog(null, "Loan amount repayment completed");
-                                            }
-                                        }
-                                        initiate();
-                                    }
-                                } else {
-                                    JOptionPane.showMessageDialog(null, "Not enough balance");
-                                }
-                            }
-                        } catch(Exception e) {
-                            JOptionPane.showMessageDialog(null, e);
-                        }
-                    } else {
-                        JOptionPane.showMessageDialog(null, "Incorrect pin");
-                    }
-                }
-            } catch (SQLException ex) {
-                JOptionPane.showMessageDialog(null, ex);
-            }
-        }
-    }//GEN-LAST:event_HomePayLoanPayInstallmentButtonActionPerformed
-
-    private void HomeMakeAdminButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_HomeMakeAdminButtonActionPerformed
-        String a = HomeAdminsTFAccNo.getText();
-        try {
-            String q = "update account set Is_Admin = '"+1+"' where Acc_No = '"+a+"'";
-            pst = conn.prepareStatement(q);
-            pst.execute();
-            JOptionPane.showMessageDialog(null, "Admin Added Successfully");
-            initiate();
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(null, e);
-        }
-    }//GEN-LAST:event_HomeMakeAdminButtonActionPerformed
-
-    private void HomeAdminsSearchButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_HomeAdminsSearchButtonActionPerformed
-        String a = HomeAdminsTFAccNo.getText();
-        try {
-            String q = "select First_Name, Last_Name, Is_Admin from account where Acc_No = '"+a+"'";
-            pst = conn.prepareStatement(q);
-            rs = pst.executeQuery();
-            if(rs.next()) {
-                String f = rs.getString("First_Name");
-                String l = rs.getString("Last_Name");
-                int ad = rs.getInt("Is_Admin");
-                if(ad == 0) {
-                    HomeAdminsTFName.setText(f + " " + l);
-                    HomeAdminsTFAccNo.setEditable(false);
-                    HomeMakeAdminButton.setEnabled(true);
-                } else {
-                    JOptionPane.showMessageDialog(null, "Entered account's holder is already an admin");
-                    HomeAdminsTFAccNo.setText("");
-                    HomeAdminsTFName.setText("");
-                }
-            } else {
-                JOptionPane.showMessageDialog(null, "Invalid Account Number");
-                HomeMakeAdminButton.setEnabled(false);
-            }
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(null, e);
-        }
-    }//GEN-LAST:event_HomeAdminsSearchButtonActionPerformed
-
-    private void HomeAdminsEditButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_HomeAdminsEditButtonActionPerformed
-        try {
-            String sql = "select Acc_No, First_Name, Last_Name from account where Is_Admin = '"+1+"'";
-            pst = conn.prepareStatement(sql);
-            rs = pst.executeQuery();
-            while(rs.next()) {
-                int a = rs.getInt(1);
-                String f = rs.getString(2);
-                String l = rs.getString(3);
-                int res = JOptionPane.showConfirmDialog(null, "Account Number: "+a+"  Name: "+f+" "+l+"\nRemove from Admins?","Manage Admins",JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
-                if(res == JOptionPane.YES_OPTION) {
-                    try {
-                        String q = "Update account set Is_Admin = '"+0+"' where Acc_No = '"+a+"'";
-                        pst = conn.prepareStatement(q);
-                        pst.execute();
-                        initiate();
-                    } catch(Exception e) {
-                        JOptionPane.showMessageDialog(null, e);
-                    }
-                }  else if (res == JOptionPane.NO_OPTION) {
-                    JOptionPane.getRootFrame().dispose();
-                }
-            }
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(null, e);
-        }
-    }//GEN-LAST:event_HomeAdminsEditButtonActionPerformed
-
-    private void HomePayLoanPayEarlyButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_HomePayLoanPayEarlyButtonActionPerformed
-        String sql = "select * from account where Acc_No = '"+acc+"'";
-        try {
-            pst = conn.prepareStatement(sql);;
-            rs = pst.executeQuery();
-            if(rs.next()) {
-                int p = rs.getInt("Is_Loan_Pending");
-                if(p == 1) {
-                    int d = rs.getInt("Loan_Duration");
-                    int am = rs.getInt("Loan_Amount");
-                    double pam = am + (am * d * 0.13);
-                    int finalAmount,  amountPaid, amountToPay;
-                    String currentDate = getDateTime();
-                    DateTimeFormatter f = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-                    LocalDateTime cDate = LocalDateTime.parse(currentDate, f);
-                    LocalDateTime lDate = rs.getTimestamp("Loan_Approve_Date").toLocalDateTime();
-                    LocalDateTime dDate = lDate.plusYears(d);
-                    if(cDate.isBefore(dDate)) {
-                        Duration duration = Duration.between(cDate, dDate);
-                        long y = ChronoUnit.YEARS.between(cDate, cDate.plus(duration));
-                        amountPaid = (int)((rs.getInt("Current_Installment") - 1) * (pam / (d * 12)));
-                        finalAmount = (int)(am + (y * am * 0.13 + (d - y) * am * 0.05));
-                        amountToPay = finalAmount - amountPaid;
-                        int res = JOptionPane.showConfirmDialog(null, "Early settlement amount: "+amountToPay+" Rs.\nDo you want to settle your loan?","Pay Loan in advance",JOptionPane.YES_NO_OPTION,JOptionPane.QUESTION_MESSAGE);
-                        if(res == JOptionPane.YES_OPTION) {
-                            String q = "select Balance from balance where Account_No = '"+acc+"'";
-                            try {
-                                pst = conn.prepareStatement(q);
-                                rs = pst.executeQuery();
-                                if(rs.next()) {
-                                    int bal = rs.getInt("Balance");
-                                    if(bal > amountToPay) {
-                                        int newbal = bal - amountToPay;
-                                        String q1 = "update balance set Balance = '"+newbal+"' where Account_No = '"+acc+"'";
-                                        pst = conn.prepareStatement(q1);
-                                        pst.execute();
-                                        setUpLoanEarlySettlementLogs(amountToPay);
-                                        String q11 = "select Baseline_Bal from account where Acc_No = '"+acc+"'";
-                                        pst = conn.prepareStatement(q11);
-                                        rs = pst.executeQuery();
-                                        if(rs.next()) {
-                                            int baselineBal = rs.getInt(1);
-                                            if(baselineBal > newbal) {
-                                                String q12 = "update account set Non_Maintenance = '"+1+"' where Acc_No = '"+acc+"'";
-                                                pst = conn.prepareStatement(q12);
-                                                pst.execute();
-                                            }
-                                        }
-                                        String q4 = "select Funds from bank";
-                                        pst = conn.prepareStatement(q4);
-                                        rs = pst.executeQuery();
-                                        if(rs.next()) {
-                                            int newFunds = rs.getInt("Funds") + amountToPay;
-                                            String q2 = "update bank set Funds = '"+newFunds+"'";
-                                            pst = conn.prepareStatement(q2);
-                                            pst.execute();
-                                            JOptionPane.showMessageDialog(null, "Loan repayment successful");
-                                            String q3 = "update account set Is_Loan_Pending = '"+0+"', Loan_Amount = '"+0+"', Loan_Duration = '"+0+"', Is_Loan_Pending = '"+0+"', Current_Installment = '"+0+"' where Acc_No = '"+acc+"'";
-                                            pst = conn.prepareStatement(q3);
-                                            pst.execute();
-                                            initiate();
-                                        }
-                                    } else {
-                                        JOptionPane.showMessageDialog(null, "Not enough balance");
-                                    }
-                                }
-                            } catch(Exception e) {
-                                JOptionPane.showMessageDialog(null, e);
-                            }
-                        } else if(res == JOptionPane.NO_OPTION) {
-                            
-                        }
-                    }
-                }
-            }
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(null, e);
-        }
-    }//GEN-LAST:event_HomePayLoanPayEarlyButtonActionPerformed
-
-    private void HomeDepositSearchButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_HomeDepositSearchButtonActionPerformed
-        String accNo = HomeDepositTFAccNo.getText();
-        if(accNo.equals(acc)) {
-            JOptionPane.showMessageDialog(null, "You cannot enter your own account number");
-        }
-        else {
-            String sql = "select First_Name, Last_Name, IFSC_Code, Balance from balance where Account_No = '"+accNo+"'";
-            try {
-                pst = conn.prepareStatement(sql);
-                rs = pst.executeQuery();
-                if(rs.next()) {
-                    HomeDepositTFFName.setText(rs.getString("First_Name"));
-                    HomeDepositTFLName.setText(rs.getString("Last_Name"));
-                    HomeDepositTFIFSCCode.setText(rs.getString("IFSC_Code"));
-                    HomeDepositTFBal.setText(rs.getString("Balance"));
-                    HomeDepositTFAccNo.setEditable(false);
-                } else {
-                    JOptionPane.showMessageDialog(null, "Invalid Account Number");
-                    HomeDepositTFAccNo.setEditable(true);
-                    
-                }
-            } catch(Exception e) {
-                JOptionPane.showMessageDialog(null, e);
-            }
-        }
-    }//GEN-LAST:event_HomeDepositSearchButtonActionPerformed
+    private void HomeManageEditButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_HomeManageEditButtonActionPerformed
+        HomeManageDesignationComboBox.setEnabled(true);
+    }//GEN-LAST:event_HomeManageEditButtonActionPerformed
     
     /**
      * @param args the command line arguments
@@ -2799,6 +3158,15 @@ public class Home extends javax.swing.JFrame {
     private javax.swing.JTextField HomeLoanTFLName;
     private javax.swing.JTable HomeLoanTable;
     private javax.swing.JButton HomeMakeAdminButton;
+    private javax.swing.JButton HomeManageDeleteButton;
+    private javax.swing.JComboBox<String> HomeManageDesignationComboBox;
+    private javax.swing.JButton HomeManageEditButton;
+    private javax.swing.JButton HomeManageSaveButton;
+    private javax.swing.JButton HomeManageSearchButton;
+    private javax.swing.JTextField HomeManageTFAccNo;
+    private javax.swing.JTextField HomeManageTFIFSC;
+    private javax.swing.JTextField HomeManageTFName;
+    private javax.swing.JTextField HomeManageTFSalary;
     private javax.swing.JButton HomePayLoanPayEarlyButton;
     private javax.swing.JButton HomePayLoanPayInstallmentButton;
     private javax.swing.JTextField HomePayLoanTFAmount;
@@ -2889,7 +3257,13 @@ public class Home extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel54;
     private javax.swing.JLabel jLabel55;
     private javax.swing.JLabel jLabel56;
+    private javax.swing.JLabel jLabel57;
+    private javax.swing.JLabel jLabel58;
+    private javax.swing.JLabel jLabel59;
     private javax.swing.JLabel jLabel6;
+    private javax.swing.JLabel jLabel60;
+    private javax.swing.JLabel jLabel61;
+    private javax.swing.JLabel jLabel62;
     private javax.swing.JLabel jLabel7;
     private javax.swing.JLabel jLabel8;
     private javax.swing.JLabel jLabel9;
@@ -2899,7 +3273,6 @@ public class Home extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel12;
     private javax.swing.JPanel jPanel13;
     private javax.swing.JPanel jPanel14;
-    private javax.swing.JPanel jPanel15;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
