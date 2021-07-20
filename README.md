@@ -1,4 +1,4 @@
-# Employees Cooperative Society Management System
+# Cooperative Bank Management System
 
 This is a software interface for cooperative society bank. This application is based on Java and SQL.
 All the account holders have a designation at some work agency which in this case is an educational institute.
