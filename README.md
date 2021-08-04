@@ -26,3 +26,6 @@ There are 3 types of users - Regular user, Admin and Chairman.
 1. Add/Remove admins
 2. Manage Designation of Employees.
 3. Monitor Bank Funds
+
+## Screenshots
+![alt text](https://github.com/SaurabhParate04/Cooperative_Bank_Management_System/blob/master/Images/2.png)
