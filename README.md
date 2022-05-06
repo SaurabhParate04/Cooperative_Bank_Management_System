@@ -30,4 +30,5 @@ There are 3 types of users - Regular user, Admin and Chairman.
 #### [Read More...](https://github.com/SaurabhParate04/Cooperative_Bank_Management_System/edit/master/Report.pdf)
 
 ## Screenshots
-![alt text](https://github.com/SaurabhParate04/Cooperative_Bank_Management_System/blob/master/Images/2.png)
+
+![home](https://github.com/SaurabhParate04/Cooperative_Bank_Management_System/blob/master/Images/2.png)
